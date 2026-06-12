@@ -1,0 +1,9 @@
+{
+  "name": "wt",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "node-pty": "^1.1.0-beta21",
+    "ws": "^8.16.0"
+  }
+}
