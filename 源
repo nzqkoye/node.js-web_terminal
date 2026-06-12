@@ -2,12 +2,15 @@
 
 const http = require("http");
 const WebSocket = require("ws");
-const pty = require("node-pty");
+const { spawn } = require("child_process");
 const os = require("os");
-const fs = require("fs");
 
 const PORT = 3000;
 const HOST = "127.0.0.1";
+
+function log(msg) {
+    process.stdout.write(`[WebTerminal] ${msg}\n`);
+}
 
 // ==================== 1. 解析命令行参数 ====================
 let authEnabled = false;
@@ -24,50 +27,30 @@ if (cIndex !== -1 && args[cIndex + 1]) {
         authPass = credentials[1];
         authEnabled = true;
     } else {
-        console.error("[ERROR] 参数格式错误！正确格式为: -c 用户名/密码 (例如: -c admin/123456)");
+        log("[ERROR] 参数格式错误！正确格式为: -c 用户名/密码");
         process.exit(1);
     }
 }
 
-// ==================== 2. 身份验证拦截器 ====================
+// 身份验证
 function authenticate(req) {
-    if (!authEnabled) return true; // 未启用认证，直接放行
-
+    if (!authEnabled) return true;
     const authHeader = req.headers["authorization"];
     if (!authHeader) return false;
-
-    // 解析 Basic Auth 请求头 (格式: Basic base64(user:pass))
     const match = authHeader.match(/^Basic\s+(.*)$/i);
     if (!match) return false;
-
     const credentials = Buffer.from(match[1], "base64").toString("ascii").split(":");
     return credentials[0] === authUser && credentials[1] === authPass;
 }
 
-// ==================== 3. 获取 Bash 路径 ====================
-function getBashShell() {
-    const platform = os.platform();
-    if (platform !== "win32") return "bash";
-
-    const gitBashPaths = [
-        "C:\\Program Files\\Git\\bin\\bash.exe",
-        "C:\\Program Files (x86)\\Git\\bin\\bash.exe"
-    ];
-    for (const binPath of gitBashPaths) {
-        if (fs.existsSync(binPath)) return binPath;
-    }
-    return fs.existsSync("C:\\Windows\\System32\\bash.exe") ? "bash.exe" : "powershell.exe";
-}
-
-// ==================== 4. 前端 HTML 模板 ====================
+// ==================== 2. 前端 HTML ====================
 const htmlContent = `<!DOCTYPE html>
-<html lang="zh-CN">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>Web Terminal (Bash)</title>
+    <title>Web Terminal</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
     <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
     <style>
         body { margin: 0; background: #1e1e1e; overflow: hidden; }
         #terminal { width: 100vw; height: 100vh; }
@@ -78,112 +61,101 @@ const htmlContent = `<!DOCTYPE html>
     <script>
         const term = new Terminal({
             cursorBlink: true,
-            fontFamily: 'Courier New, monospace',
+            fontFamily: 'monospace',
             fontSize: 14,
             theme: { background: '#1e1e1e' }
         });
-        const fitAddon = new FitAddon.FitAddon();
-        term.loadAddon(fitAddon);
         term.open(document.getElementById('terminal'));
-        fitAddon.fit();
 
         const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
         const socket = new WebSocket(protocol + window.location.host);
 
         socket.onopen = () => {
-            sendResize();
-            term.onData(data => socket.send(JSON.stringify({ type: 'input', data })));
+            term.write('*** 已成功连接到容器内网 ***\\r\\n');
+            term.onData(data => socket.send(data));
         };
-
-        socket.onmessage = event => term.write(event.data);
-
-        function sendResize() {
-            fitAddon.fit();
-            if (socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({
-                    type: 'resize',
-                    cols: term.cols,
-                    rows: term.rows
-                }));
-            }
-        }
-
-        window.addEventListener('resize', sendResize);
-        socket.onclose = () => term.write('\\r\\n[Bash 连接已断开]\\r\\n');
+        socket.onmessage = event => {
+            // 确保接收到的是字符串并直接写入
+            term.write(event.data);
+        };
+        socket.onclose = () => term.write('\\r\\n[连接已断开]\\r\\n');
     </script>
 </body>
 </html>`;
 
-// ==================== 5. HTTP 服务 (带 Basic Auth 拦截) ====================
+// ==================== 3. HTTP 服务 ====================
 const server = http.createServer((req, res) => {
     if (!authenticate(req)) {
         res.writeHead(401, {
-            "WWW-Authenticate": 'Basic realm="Secure Web Terminal"',
+            "WWW-Authenticate": 'Basic realm="Secure Terminal"',
             "Content-Type": "text/plain; charset=utf-8"
         });
-        return res.end("需要身份认证。");
+        return res.end("Unauthorized");
     }
-
     res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
     res.end(htmlContent);
 });
 
-// ==================== 6. WebSocket 服务 (带连接安全验证) ====================
+// ==================== 4. WebSocket 服务 ====================
 const wss = new WebSocket.Server({ server });
 
 wss.on("connection", (ws, req) => {
-    // 验证 WebSocket 连接是否合法
+    log(`收到来自 ${req.socket.remoteAddress} 的 WebSocket 连接`);
+    
     if (!authenticate(req)) {
-        ws.close(4001, "Unauthorized");
+        ws.close();
         return;
     }
 
-    const shell = getBashShell();
-    const ptyProcess = pty.spawn(shell, [], {
-        name: "xterm-256color",
-        cols: 80,
-        rows: 24,
-        cwd: os.homedir(),
-        env: Object.assign({}, process.env, { TERM: "xterm-256color" })
+    let shell, shellArgs;
+
+    if (os.platform() === "win32") {
+        shell = "cmd.exe";
+        shellArgs = [];
+    } else {
+        // 【黑魔法】优先使用 Python 强行建立真正的 PTY 虚拟终端，若无 Python 则降级到 bash -i
+        shell = "sh";
+        shellArgs = [
+            "-c",
+            "python3 -c \"import pty; pty.spawn('/bin/bash')\" 2>/dev/null || python -c \"import pty; pty.spawn('/bin/bash')\" 2>/dev/null || bash -i || sh -i"
+        ];
+    }
+
+    log(`启动终端中...`);
+
+    const bash = spawn(shell, shellArgs, {
+        env: Object.assign({}, process.env, { TERM: "xterm-256color" }),
+        cwd: os.homedir()
     });
 
-    ptyProcess.onData((data) => {
+    // 管道：数据传输 (必须通过 .toString("utf-8") 转成文本发送给浏览器)
+    bash.stdout.on("data", (data) => {
         if (ws.readyState === WebSocket.OPEN) {
-            ws.send(data);
+            ws.send(data.toString("utf-8"));
+        }
+    });
+
+    bash.stderr.on("data", (data) => {
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.send(data.toString("utf-8"));
         }
     });
 
     ws.on("message", (message) => {
-        try {
-            const msg = JSON.parse(message.toString());
-            if (msg.type === "input" && typeof msg.data === "string") {
-                ptyProcess.write(msg.data);
-            } else if (msg.type === "resize") {
-                const cols = Math.max(1, parseInt(msg.cols, 10) || 80);
-                const rows = Math.max(1, parseInt(msg.rows, 10) || 24);
-                ptyProcess.resize(cols, rows);
-            }
-        } catch (e) {
-            ptyProcess.write(message.toString());
+        if (bash.stdin.writable) {
+            bash.stdin.write(message.toString());
         }
     });
 
     const cleanup = () => {
-        try { ptyProcess.kill(); } catch (e) {}
+        try { bash.kill(); } catch (e) {}
     };
 
+    bash.on("close", () => ws.close());
     ws.on("close", cleanup);
     ws.on("error", cleanup);
 });
 
-// ==================== 7. 启动服务 ====================
 server.listen(PORT, HOST, () => {
-    console.log(`================================================`);
-    console.log(`  Web Terminal 运行在: http://${HOST}:${PORT}`);
-    if (authEnabled) {
-        console.log(`  [安全模式] 已启用身份验证。用户名: ${authUser}`);
-    } else {
-        console.log(`  [警告] 未启用身份验证！如需加密，请使用: node server.js -c 用户名/密码`);
-    }
-    console.log(`================================================`);
+    log(`Web Terminal 运行在: http://${HOST}:${PORT}`);
 });
