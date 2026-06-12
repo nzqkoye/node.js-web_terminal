@@ -1,0 +1,162 @@
+const http = require('http');
+const WebSocket = require('ws');
+const pty = require('node-pty');
+const os = require('os');
+const fs = require('fs');
+
+const PORT = 3000;
+const HOST = '127.0.0.1';
+
+// 1. 寻找系统中的 bash 路径
+function getBashShell() {
+    const platform = os.platform();
+    
+    if (platform !== 'win32') {
+        return 'bash'; // Linux 和 macOS 默认有 bash
+    }
+
+    // Windows 平台下尝试寻找 Git Bash 或 WSL Bash
+    const gitBashPaths = [
+        'C:\\Program Files\\Git\\bin\\bash.exe',
+        'C:\\Program Files (x86)\\Git\\bin\\bash.exe',
+        process.env.LOCALAPPDATA + '\\Programs\\Git\\bin\\bash.exe'
+    ];
+
+    for (const path / gitBashPaths) {
+        if (fs.existsSync(path)) {
+            return path;
+        }
+    }
+
+    // 如果没有 Git Bash，尝试 WSL 的 bash.exe，再不行就退回 powershell
+    return fs.existsSync('C:\\Windows\\System32\\bash.exe') ? 'bash.exe' : 'powershell.exe';
+}
+
+// 2. 融合前端 HTML (集成了 xterm.js 和 自动缩放插件)
+const htmlContent = `
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Web Terminal (Bash)</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+    <!-- 引入自适应大小插件 -->
+    <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
+    <style>
+        body { margin: 0; background: #1e1e1e; overflow: hidden; }
+        #terminal { width: 100vw; height: 100vh; }
+    </style>
+</head>
+<body>
+    <div id="terminal"></div>
+    <script>
+        const term = new Terminal({
+            cursorBlink: true,
+            fontFamily: 'Courier New, courier-code, monospace'，
+            fontSize: 14,
+            theme: { background: '#1e1e1e' }
+        });
+        
+        const fitAddon = new FitAddon.FitAddon();
+        term.loadAddon(fitAddon);
+        term.open(document.getElementById('terminal'));
+        fitAddon.fit();
+
+        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+        const socket = new WebSocket(protocol + window.location.host);
+
+        socket.onopen = () => {
+            // 告诉后端当前的窗口大小
+            sendResize();
+
+            // 监听键盘输入发送给后端
+            term.onData(data => {
+                socket.send(JSON.stringify({ type: 'input'， data }));
+            });
+
+            // 监听后端输出
+            socket.onmessage = event => {
+                term.write(event.data);
+            };
+        };
+
+        // 窗口大小改变时，通知后端 bash 调整大小
+        function sendResize() {
+            fitAddon.fit();
+            socket.send(JSON.stringify({
+                type: 'resize',
+                cols: term.cols,
+                rows: term.rows
+            }));
+        }
+
+        window.addEventListener('resize', sendResize);
+
+        socket.onclose = () => {
+            term.write('\\r\\n[Bash 连接已断开]\\r\\n');
+        };
+    </script>
+</body>
+</html>
+`;
+
+// 3. 创建 HTTP 服务
+const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(htmlContent);
+});
+
+// 4. 创建 WebSocket 服务
+const wss = new WebSocket.Server({ server });
+
+wss.on('connection', (ws) => {
+    const shell = getBashShell();
+    console.log(`正在启动终端内核: ${shell}`);
+
+    // 创建 pty 进程
+    const ptyProcess = pty.spawn(shell, [], {
+        name: 'xterm-256color', // 支持 256 色，让 bash 颜色更丰富
+        cols: 80,
+        rows: 24,
+        cwd: os.homedir(),
+        env: {
+            ...process.env,
+            TERM: 'xterm-256color' // 确保 bash 知道自己运行在彩色终端中
+        }
+    });
+
+    // 终端输出 -> 浏览器
+    ptyProcess.onData((data) => {
+        ws.send(data);
+    });
+
+    // 浏览器输入 -> 终端
+    ws.on('message', (message) => {
+        try {
+            const msg = JSON.parse(message.toString());
+            if (msg.type === 'input') {
+                ptyProcess.write(msg.data);
+            } else if (msg.type === 'resize') {
+                // 动态调整 pty 终端的行列数
+                ptyProcess.resize(msg.cols, msg.rows);
+            }
+        } catch (e) {
+            // 兼容非 JSON 格式的直接输入
+            ptyProcess.write(message.toString());
+        }
+    });
+
+    ws.on('close', () => {
+        ptyProcess.kill();
+        console.log('终端会话已结束');
+    });
+});
+
+// 5. 监听 127.0.0.1
+server.listen(PORT, HOST, () => {
+    console.log(`================================================`);
+    console.log(`  Bash Web Terminal 已成功启动！`);
+    console.log(`  请在浏览器打开: http://${HOST}:${PORT}`);
+    console.log(`================================================`);
+});
