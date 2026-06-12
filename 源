@@ -75,7 +75,6 @@ const htmlContent = `<!DOCTYPE html>
             term.onData(data => socket.send(data));
         };
         socket.onmessage = event => {
-            // 确保接收到的是字符串并直接写入
             term.write(event.data);
         };
         socket.onclose = () => term.write('\\r\\n[连接已断开]\\r\\n');
@@ -107,13 +106,20 @@ wss.on("connection", (ws, req) => {
         return;
     }
 
-    let shell, shellArgs;
+    // 【新增】防断线心跳：每 20 秒向浏览器发送一次 ping，保持 Cloudflare 隧道活跃
+    const keepAliveTimer = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+            ws.ping(); // 发送底层 ping 帧
+        } else {
+            clearInterval(keepAliveTimer);
+        }
+    }, 20000);
 
+    let shell, shellArgs;
     if (os.platform() === "win32") {
         shell = "cmd.exe";
         shellArgs = [];
     } else {
-        // 【黑魔法】优先使用 Python 强行建立真正的 PTY 虚拟终端，若无 Python 则降级到 bash -i
         shell = "sh";
         shellArgs = [
             "-c",
@@ -128,7 +134,6 @@ wss.on("connection", (ws, req) => {
         cwd: os.homedir()
     });
 
-    // 管道：数据传输 (必须通过 .toString("utf-8") 转成文本发送给浏览器)
     bash.stdout.on("data", (data) => {
         if (ws.readyState === WebSocket.OPEN) {
             ws.send(data.toString("utf-8"));
@@ -148,6 +153,7 @@ wss.on("connection", (ws, req) => {
     });
 
     const cleanup = () => {
+        clearInterval(keepAliveTimer); // 清除心跳定时器
         try { bash.kill(); } catch (e) {}
     };
 
