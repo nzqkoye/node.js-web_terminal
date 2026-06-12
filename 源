@@ -1,7 +1,7 @@
 "use strict";
 
 const http = require("http");
-const WebSocket = require("ws");
+const crypto = require("crypto");
 const { spawn } = require("child_process");
 const os = require("os");
 
@@ -71,7 +71,7 @@ const htmlContent = `<!DOCTYPE html>
         const socket = new WebSocket(protocol + window.location.host);
 
         socket.onopen = () => {
-            term.write('*** 已成功连接到容器内网 ***\\r\\n');
+            term.write('*** 已成功连接到容器内网 (免依赖稳定版) ***\\r\\n');
             term.onData(data => socket.send(data));
         };
         socket.onmessage = event => {
@@ -95,73 +95,164 @@ const server = http.createServer((req, res) => {
     res.end(htmlContent);
 });
 
-// ==================== 4. WebSocket 服务 ====================
-const wss = new WebSocket.Server({ server });
-
-wss.on("connection", (ws, req) => {
-    log(`收到来自 ${req.socket.remoteAddress} 的 WebSocket 连接`);
-    
+// ==================== 4. 原生 WebSocket 协议实现 (免依赖) ====================
+server.on("upgrade", (req, socket) => {
     if (!authenticate(req)) {
-        ws.close();
+        socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+        socket.destroy();
         return;
     }
 
-    // 【新增】防断线心跳：每 20 秒向浏览器发送一次 ping，保持 Cloudflare 隧道活跃
+    const secKey = req.headers["sec-websocket-key"];
+    if (!secKey) {
+        socket.destroy();
+        return;
+    }
+
+    // 握手响应
+    const acceptValue = crypto
+        .createHash("sha1")
+        .update(secKey + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11")
+        .digest("base64");
+
+    socket.write(
+        "HTTP/1.1 101 Switching Protocols\r\n" +
+        "Upgrade: websocket\r\n" +
+        "Connection: Upgrade\r\n" +
+        "Sec-WebSocket-Accept: " + acceptValue + "\r\n\r\n"
+    );
+
+    // 封装极简 WebSocket 对象
+    const ws = {
+        socket,
+        readyState: 1, // OPEN
+        send: function (data) {
+            if (this.readyState !== 1) return;
+            const payload = Buffer.from(data, "utf-8");
+            const len = payload.length;
+            let header;
+            if (len < 126) {
+                header = Buffer.alloc(2);
+                header[0] = 0x81; // FIN + Text Frame
+                header[1] = len;
+            } else if (len <= 65535) {
+                header = Buffer.alloc(4);
+                header[0] = 0x81;
+                header[1] = 126;
+                header.writeUInt16BE(len, 2);
+            } else {
+                header = Buffer.alloc(10);
+                header[0] = 0x81;
+                header[1] = 127;
+                header.writeBigUInt64BE(BigInt(len), 2);
+            }
+            socket.write(Buffer.concat([header, payload]));
+        },
+        ping: function () {
+            if (this.readyState === 1) {
+                socket.write(Buffer.from([0x89, 0x00])); // Ping Frame
+            }
+        },
+        close: function () {
+            if (this.readyState === 1) {
+                this.readyState = 3;
+                socket.write(Buffer.from([0x88, 0x00])); // Close Frame
+                socket.end();
+            }
+        },
+        onmessage: null,
+        onclose: null
+    };
+
+    // 心跳机制：每 20 秒发送一次底层 ping，防止 Cloudflare 闲置断线
     const keepAliveTimer = setInterval(() => {
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.ping(); // 发送底层 ping 帧
+        if (ws.readyState === 1) {
+            ws.ping();
         } else {
             clearInterval(keepAliveTimer);
         }
     }, 20000);
 
-    let shell, shellArgs;
-    if (os.platform() === "win32") {
-        shell = "cmd.exe";
-        shellArgs = [];
-    } else {
-        shell = "sh";
-        shellArgs = [
-            "-c",
-            "python3 -c \"import pty; pty.spawn('/bin/bash')\" 2>/dev/null || python -c \"import pty; pty.spawn('/bin/bash')\" 2>/dev/null || bash -i || sh -i"
-        ];
-    }
-
-    log(`启动终端中...`);
+    // 启动 Shell 进程 (Python PTY 虚拟终端)
+    let shell = "sh";
+    let shellArgs = [
+        "-c",
+        "python3 -c \"import pty; pty.spawn('/bin/bash')\" 2>/dev/null || python -c \"import pty; pty.spawn('/bin/bash')\" 2>/dev/null || bash -i || sh -i"
+    ];
 
     const bash = spawn(shell, shellArgs, {
         env: Object.assign({}, process.env, { TERM: "xterm-256color" }),
         cwd: os.homedir()
     });
 
-    bash.stdout.on("data", (data) => {
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.send(data.toString("utf-8"));
-        }
-    });
+    bash.stdout.on("data", (data) => ws.send(data.toString("utf-8")));
+    bash.stderr.on("data", (data) => ws.send(data.toString("utf-8")));
 
-    bash.stderr.on("data", (data) => {
-        if (ws.readyState === WebSocket.OPEN) {
-            ws.send(data.toString("utf-8"));
-        }
-    });
+    // 解析客户端发送上来的 WebSocket 帧
+    let buffer = Buffer.alloc(0);
+    socket.on("data", (chunk) => {
+        buffer = Buffer.concat([buffer, chunk]);
+        while (true) {
+            if (buffer.length < 2) return;
+            const firstByte = buffer[0];
+            const secondByte = buffer[1];
+            const opcode = firstByte & 0x0F;
+            const masked = (secondByte & 0x80) !== 0;
+            let payloadLen = secondByte & 0x7F;
 
-    ws.on("message", (message) => {
-        if (bash.stdin.writable) {
-            bash.stdin.write(message.toString());
+            let offset = 2;
+            if (payloadLen === 126) {
+                if (buffer.length < 4) return;
+                payloadLen = buffer.readUInt16BE(2);
+                offset = 4;
+            } else if (payloadLen === 127) {
+                if (buffer.length < 10) return;
+                payloadLen = Number(buffer.readBigUInt64BE(2));
+                offset = 10;
+            }
+
+            let maskKey;
+            if (masked) {
+                if (buffer.length < offset + 4) return;
+                maskKey = buffer.slice(offset, offset + 4);
+                offset += 4;
+            }
+
+            if (buffer.length < offset + payloadLen) return;
+            const payload = buffer.slice(offset, offset + payloadLen);
+            buffer = buffer.slice(offset + payloadLen);
+
+            if (opcode === 0x8) { // 浏览器主动断开
+                ws.readyState = 3;
+                if (ws.onclose) ws.onclose();
+                return;
+            }
+
+            if (opcode === 0x1 && bash.stdin.writable) { // 文本数据
+                if (masked) {
+                    for (let i = 0; i < payload.length; i++) {
+                        payload[i] ^= maskKey[i % 4];
+                    }
+                }
+                bash.stdin.write(payload.toString("utf-8"));
+            }
         }
     });
 
     const cleanup = () => {
-        clearInterval(keepAliveTimer); // 清除心跳定时器
+        ws.readyState = 3;
+        clearInterval(keepAliveTimer);
         try { bash.kill(); } catch (e) {}
+        if (ws.onclose) ws.onclose();
     };
 
-    bash.on("close", () => ws.close());
-    ws.on("close", cleanup);
-    ws.on("error", cleanup);
+    bash.on("close", cleanup);
+    socket.on("close", cleanup);
+    socket.on("error", cleanup);
 });
 
 server.listen(PORT, HOST, () => {
-    log(`Web Terminal 运行在: http://${HOST}:${PORT}`);
+    log(`=========================================`);
+    log(`原生免依赖 Web Terminal 运行在: http://${HOST}:${PORT}`);
+    log(`=========================================`);
 });
