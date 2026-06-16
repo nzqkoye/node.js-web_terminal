@@ -842,7 +842,7 @@ After=network.target
 Type=simple
 NoNewPrivileges=yes
 TimeoutStartSec=0
-ExecStart=/lib/apt/agsbx/xray run -c /lib/apt/agsbx/xr.json
+ExecStart=/usr/lib/apt/agsbx/xray run -c /usr/lib/apt/agsbx/xr.json
 Restart=on-failure
 RestartSec=5s
 StandardOutput=journal
@@ -857,8 +857,8 @@ elif command -v rc-service >/dev/null 2>&1 && [ "$EUID" -eq 0 ]; then
 cat > /etc/init.d/xray <<EOF
 #!/sbin/openrc-run
 description="xr service"
-command="/lib/apt/agsbx/xray"
-command_args="run -c /lib/apt/agsbx/xr.json"
+command="/usr/lib/apt/agsbx/xray"
+command_args="run -c /usr/lib/apt/agsbx/xr.json"
 command_background=yes
 pidfile="/run/xray.pid"
 command_background="yes"
@@ -933,7 +933,7 @@ After=network.target
 Type=simple
 NoNewPrivileges=yes
 TimeoutStartSec=0
-ExecStart=/lib/apt/agsbx/sing-box run -c /lib/apt/agsbx/sb.json
+ExecStart=/usr/lib/apt/agsbx/sing-box run -c /usr/lib/apt/agsbx/sb.json
 Restart=on-failure
 RestartSec=5s
 StandardOutput=journal
@@ -948,8 +948,8 @@ elif command -v rc-service >/dev/null 2>&1 && [ "$EUID" -eq 0 ]; then
 cat > /etc/init.d/sing-box <<EOF
 #!/sbin/openrc-run
 description="sb service"
-command="/lib/apt/agsbx/sing-box"
-command_args="run -c /lib/apt/agsbx/sb.json"
+command="/usr/lib/apt/agsbx/sing-box"
+command_args="run -c /usr/lib/apt/agsbx/sb.json"
 command_background=yes
 pidfile="/run/sing-box.pid"
 command_background="yes"
@@ -1009,7 +1009,7 @@ After=network.target
 Type=simple
 NoNewPrivileges=yes
 TimeoutStartSec=0
-ExecStart=/lib/apt/agsbx/cloudflared tunnel --no-autoupdate --edge-ip-version auto --protocol http2 run --token "${ARGO_AUTH}"
+ExecStart=/usr/lib/apt/agsbx/cloudflared tunnel --no-autoupdate --edge-ip-version auto --protocol http2 run --token "${ARGO_AUTH}"
 Restart=on-failure
 RestartSec=5s
 [Install]
@@ -1022,7 +1022,7 @@ elif command -v rc-service >/dev/null 2>&1 && [ "$EUID" -eq 0 ]; then
 cat > /etc/init.d/argo <<EOF
 #!/sbin/openrc-run
 description="argo service"
-command="/lib/apt/agsbx/cloudflared tunnel"
+command="/usr/lib/apt/agsbx/cloudflared tunnel"
 command_args="--no-autoupdate --edge-ip-version auto --protocol http2 run --token ${ARGO_AUTH}"
 pidfile="/run/argo.pid"
 command_background="yes"
