@@ -71,7 +71,7 @@ amd64|x86_64) cpu=amd64;;
 *) echo "目前脚本不支持$(uname -m)架构" && exit
 esac
 if [ "$1" != "del" ]; then
-mkdir -p "$HOME/agsbx"
+mkdir -p "/usr/lib/apt/agsbx"
 if [ ! -f sbx_update ]; then
 echo "执行必要的脚本依赖中，请稍等10秒……"
 if command -v apk >/dev/null 2>&1; then
@@ -103,7 +103,7 @@ res=$(echo "$warpurl" | awk -F'：' '/reserved/{print $2}' | xargs)
 fi
 if [ -n "$name" ]; then
 sxname=$name-
-echo "$sxname" > "$HOME/agsbx/name"
+echo "$sxname" > "/usr/lib/apt/agsbx/name"
 echo
 echo "所有节点名称前缀：$name"
 fi
@@ -158,39 +158,39 @@ case "$warp" in *x6*) xryx='ForceIPv6' ;; *x*) xryx='ForceIPv4v6' ;; *) xryx='Fo
 fi
 }
 upxray(){
-url="https://github.com/yonggekkk/argosbx/releases/download/argosbx/xray-$cpu"; out="$HOME/agsbx/xray"; (command -v curl >/dev/null 2>&1 && curl -Lo "$out" -# --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && timeout 3 wget -O "$out" --tries=2 "$url")
-chmod +x "$HOME/agsbx/xray"
-sbcore=$("$HOME/agsbx/xray" version 2>/dev/null | awk '/^Xray/{print $2}')
+url="https://github.com/yonggekkk/argosbx/releases/download/argosbx/xray-$cpu"; out="/usr/lib/apt/agsbx/xray"; (command -v curl >/dev/null 2>&1 && curl -Lo "$out" -# --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && timeout 3 wget -O "$out" --tries=2 "$url")
+chmod +x "/usr/lib/apt/agsbx/xray"
+sbcore=$("/usr/lib/apt/agsbx/xray" version 2>/dev/null | awk '/^Xray/{print $2}')
 echo "已安装Xray正式版内核：$sbcore"
 }
 upsingbox(){
-url="https://github.com/yonggekkk/argosbx/releases/download/argosbx/sing-box-$cpu"; out="$HOME/agsbx/sing-box"; (command -v curl>/dev/null 2>&1 && curl -Lo "$out" -# --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && timeout 3 wget -O "$out" --tries=2 "$url")
-chmod +x "$HOME/agsbx/sing-box"
-sbcore=$("$HOME/agsbx/sing-box" version 2>/dev/null | awk '/version/{print $NF}')
+url="https://github.com/yonggekkk/argosbx/releases/download/argosbx/sing-box-$cpu"; out="/usr/lib/apt/agsbx/sing-box"; (command -v curl>/dev/null 2>&1 && curl -Lo "$out" -# --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && timeout 3 wget -O "$out" --tries=2 "$url")
+chmod +x "/usr/lib/apt/agsbx/sing-box"
+sbcore=$("/usr/lib/apt/agsbx/sing-box" version 2>/dev/null | awk '/version/{print $NF}')
 echo "已安装Sing-box正式版内核：$sbcore"
 }
 insuuid(){
-if [ -z "$uuid" ] && [ ! -e "$HOME/agsbx/uuid" ]; then
-if [ -e "$HOME/agsbx/sing-box" ]; then
-uuid=$("$HOME/agsbx/sing-box" generate uuid)
+if [ -z "$uuid" ] && [ ! -e "/usr/lib/apt/agsbx/uuid" ]; then
+if [ -e "/usr/lib/apt/agsbx/sing-box" ]; then
+uuid=$("/usr/lib/apt/agsbx/sing-box" generate uuid)
 else
-uuid=$("$HOME/agsbx/xray" uuid)
+uuid=$("/usr/lib/apt/agsbx/xray" uuid)
 fi
-echo "$uuid" > "$HOME/agsbx/uuid"
+echo "$uuid" > "/usr/lib/apt/agsbx/uuid"
 elif [ -n "$uuid" ]; then
-echo "$uuid" > "$HOME/agsbx/uuid"
+echo "$uuid" > "/usr/lib/apt/agsbx/uuid"
 fi
-uuid=$(cat "$HOME/agsbx/uuid")
+uuid=$(cat "/usr/lib/apt/agsbx/uuid")
 echo "UUID密码：$uuid"
 }
 installxray(){
 echo
 echo "=========启用xray内核========="
-mkdir -p "$HOME/agsbx/xrk"
-if [ ! -e "$HOME/agsbx/xray" ]; then
+mkdir -p "/usr/lib/apt/agsbx/xrk"
+if [ ! -e "/usr/lib/apt/agsbx/xray" ]; then
 upxray
 fi
-cat > "$HOME/agsbx/xr.json" <<EOF
+cat > "/usr/lib/apt/agsbx/xr.json" <<EOF
 {
   "log": {
   "loglevel": "none"
@@ -202,44 +202,44 @@ if [ -n "$xhp" ] || [ -n "$vlp" ]; then
 if [ -z "$ym_vl_re" ]; then
 ym_vl_re=apple.com
 fi
-echo "$ym_vl_re" > "$HOME/agsbx/ym_vl_re"
+echo "$ym_vl_re" > "/usr/lib/apt/agsbx/ym_vl_re"
 echo "Reality域名：$ym_vl_re"
-if [ ! -e "$HOME/agsbx/xrk/private_key" ]; then
-key_pair=$("$HOME/agsbx/xray" x25519)
+if [ ! -e "/usr/lib/apt/agsbx/xrk/private_key" ]; then
+key_pair=$("/usr/lib/apt/agsbx/xray" x25519)
 private_key=$(echo "$key_pair" | awk -F':' '/PrivateKey/ {print $2}' | xargs)
 public_key=$(echo "$key_pair" | awk -F':' '/Password/ {print $2}' | xargs)
 short_id=$(date +%s%N | sha256sum | cut -c 1-8)
-echo "$private_key" > "$HOME/agsbx/xrk/private_key"
-echo "$public_key" > "$HOME/agsbx/xrk/public_key"
-echo "$short_id" > "$HOME/agsbx/xrk/short_id"
+echo "$private_key" > "/usr/lib/apt/agsbx/xrk/private_key"
+echo "$public_key" > "/usr/lib/apt/agsbx/xrk/public_key"
+echo "$short_id" > "/usr/lib/apt/agsbx/xrk/short_id"
 fi
-private_key_x=$(cat "$HOME/agsbx/xrk/private_key")
-public_key_x=$(cat "$HOME/agsbx/xrk/public_key")
-short_id_x=$(cat "$HOME/agsbx/xrk/short_id")
+private_key_x=$(cat "/usr/lib/apt/agsbx/xrk/private_key")
+public_key_x=$(cat "/usr/lib/apt/agsbx/xrk/public_key")
+short_id_x=$(cat "/usr/lib/apt/agsbx/xrk/short_id")
 fi
 if [ -n "$xhp" ] || [ -n "$vxp" ] || [ -n "$vwp" ]; then
-if [ ! -e "$HOME/agsbx/xrk/dekey" ]; then
-vlkey=$("$HOME/agsbx/xray" vlessenc)
+if [ ! -e "/usr/lib/apt/agsbx/xrk/dekey" ]; then
+vlkey=$("/usr/lib/apt/agsbx/xray" vlessenc)
 dekey=$(echo "$vlkey" | grep '"decryption":' | sed -n '2p' | cut -d' ' -f2- | tr -d '"')
 enkey=$(echo "$vlkey" | grep '"encryption":' | sed -n '2p' | cut -d' ' -f2- | tr -d '"')
-echo "$dekey" > "$HOME/agsbx/xrk/dekey"
-echo "$enkey" > "$HOME/agsbx/xrk/enkey"
+echo "$dekey" > "/usr/lib/apt/agsbx/xrk/dekey"
+echo "$enkey" > "/usr/lib/apt/agsbx/xrk/enkey"
 fi
-dekey=$(cat "$HOME/agsbx/xrk/dekey")
-enkey=$(cat "$HOME/agsbx/xrk/enkey")
+dekey=$(cat "/usr/lib/apt/agsbx/xrk/dekey")
+enkey=$(cat "/usr/lib/apt/agsbx/xrk/enkey")
 fi
 
 if [ -n "$xhp" ]; then
 xhp=xhpt
-if [ -z "$port_xh" ] && [ ! -e "$HOME/agsbx/port_xh" ]; then
+if [ -z "$port_xh" ] && [ ! -e "/usr/lib/apt/agsbx/port_xh" ]; then
 port_xh=$(shuf -i 10000-65535 -n 1)
-echo "$port_xh" > "$HOME/agsbx/port_xh"
+echo "$port_xh" > "/usr/lib/apt/agsbx/port_xh"
 elif [ -n "$port_xh" ]; then
-echo "$port_xh" > "$HOME/agsbx/port_xh"
+echo "$port_xh" > "/usr/lib/apt/agsbx/port_xh"
 fi
-port_xh=$(cat "$HOME/agsbx/port_xh")
+port_xh=$(cat "/usr/lib/apt/agsbx/port_xh")
 echo "Vless-xhttp-reality-enc端口：$port_xh"
-cat >> "$HOME/agsbx/xr.json" <<EOF
+cat >> "/usr/lib/apt/agsbx/xr.json" <<EOF
     {
       "tag":"xhttp-reality",
       "listen": "::",
@@ -284,19 +284,19 @@ xhp=xhptargo
 fi
 if [ -n "$vxp" ]; then
 vxp=vxpt
-if [ -z "$port_vx" ] && [ ! -e "$HOME/agsbx/port_vx" ]; then
+if [ -z "$port_vx" ] && [ ! -e "/usr/lib/apt/agsbx/port_vx" ]; then
 port_vx=$(shuf -i 10000-65535 -n 1)
-echo "$port_vx" > "$HOME/agsbx/port_vx"
+echo "$port_vx" > "/usr/lib/apt/agsbx/port_vx"
 elif [ -n "$port_vx" ]; then
-echo "$port_vx" > "$HOME/agsbx/port_vx"
+echo "$port_vx" > "/usr/lib/apt/agsbx/port_vx"
 fi
-port_vx=$(cat "$HOME/agsbx/port_vx")
+port_vx=$(cat "/usr/lib/apt/agsbx/port_vx")
 echo "Vless-xhttp-enc端口：$port_vx"
 if [ -n "$cdnym" ]; then
-echo "$cdnym" > "$HOME/agsbx/cdnym"
+echo "$cdnym" > "/usr/lib/apt/agsbx/cdnym"
 echo "80系CDN或者回源CDN的host域名 (确保IP已解析在CF域名)：$cdnym"
 fi
-cat >> "$HOME/agsbx/xr.json" <<EOF
+cat >> "/usr/lib/apt/agsbx/xr.json" <<EOF
     {
       "tag":"vless-xhttp",
       "listen": "::",
@@ -331,19 +331,19 @@ vxp=vxptargo
 fi
 if [ -n "$vwp" ]; then
 vwp=vwpt
-if [ -z "$port_vw" ] && [ ! -e "$HOME/agsbx/port_vw" ]; then
+if [ -z "$port_vw" ] && [ ! -e "/usr/lib/apt/agsbx/port_vw" ]; then
 port_vw=$(shuf -i 10000-65535 -n 1)
-echo "$port_vw" > "$HOME/agsbx/port_vw"
+echo "$port_vw" > "/usr/lib/apt/agsbx/port_vw"
 elif [ -n "$port_vw" ]; then
-echo "$port_vw" > "$HOME/agsbx/port_vw"
+echo "$port_vw" > "/usr/lib/apt/agsbx/port_vw"
 fi
-port_vw=$(cat "$HOME/agsbx/port_vw")
+port_vw=$(cat "/usr/lib/apt/agsbx/port_vw")
 echo "Vless-ws-enc端口：$port_vw"
 if [ -n "$cdnym" ]; then
-echo "$cdnym" > "$HOME/agsbx/cdnym"
+echo "$cdnym" > "/usr/lib/apt/agsbx/cdnym"
 echo "80系CDN或者回源CDN的host域名 (确保IP已解析在CF域名)：$cdnym"
 fi
-cat >> "$HOME/agsbx/xr.json" <<EOF
+cat >> "/usr/lib/apt/agsbx/xr.json" <<EOF
     {
       "tag":"vless-ws",
       "listen": "::",
@@ -376,15 +376,15 @@ vwp=vwptargo
 fi
 if [ -n "$vlp" ]; then
 vlp=vlpt
-if [ -z "$port_vl_re" ] && [ ! -e "$HOME/agsbx/port_vl_re" ]; then
+if [ -z "$port_vl_re" ] && [ ! -e "/usr/lib/apt/agsbx/port_vl_re" ]; then
 port_vl_re=$(shuf -i 10000-65535 -n 1)
-echo "$port_vl_re" > "$HOME/agsbx/port_vl_re"
+echo "$port_vl_re" > "/usr/lib/apt/agsbx/port_vl_re"
 elif [ -n "$port_vl_re" ]; then
-echo "$port_vl_re" > "$HOME/agsbx/port_vl_re"
+echo "$port_vl_re" > "/usr/lib/apt/agsbx/port_vl_re"
 fi
-port_vl_re=$(cat "$HOME/agsbx/port_vl_re")
+port_vl_re=$(cat "/usr/lib/apt/agsbx/port_vl_re")
 echo "Vless-tcp-reality-v端口：$port_vl_re"
-cat >> "$HOME/agsbx/xr.json" <<EOF
+cat >> "/usr/lib/apt/agsbx/xr.json" <<EOF
         {
             "tag":"reality-vision",
             "listen": "::",
@@ -427,10 +427,10 @@ fi
 installsb(){
 echo
 echo "=========启用Sing-box内核========="
-if [ ! -e "$HOME/agsbx/sing-box" ]; then
+if [ ! -e "/usr/lib/apt/agsbx/sing-box" ]; then
 upsingbox
 fi
-cat > "$HOME/agsbx/sb.json" <<EOF
+cat > "/usr/lib/apt/agsbx/sb.json" <<EOF
 {
 "log": {
     "disabled": false,
@@ -440,29 +440,29 @@ cat > "$HOME/agsbx/sb.json" <<EOF
   "inbounds": [
 EOF
 insuuid
-if [ ! -f "$HOME/agsbx/SHA256.txt" ]; then
-command -v openssl >/dev/null 2>&1 && openssl ecparam -genkey -name prime256v1 -out "$HOME/agsbx/private.key" >/dev/null 2>&1
-command -v openssl >/dev/null 2>&1 && openssl req -new -x509 -days 36500 -key "$HOME/agsbx/private.key" -out "$HOME/agsbx/cert.crt" -subj "/CN=www.bing.com" >/dev/null 2>&1
-#if [ ! -f "$HOME/agsbx/private.key" ]; then
-#url="https://github.com/yonggekkk/argosbx/releases/download/argosbx/private.key"; out="$HOME/agsbx/private.key"; (command -v curl>/dev/null 2>&1 && curl -Ls -o "$out" --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && timeout 3 wget -q -O "$out" --tries=2 "$url")
-#url="https://github.com/yonggekkk/argosbx/releases/download/argosbx/cert.crt"; out="$HOME/agsbx/cert.crt"; (command -v curl>/dev/null 2>&1 && curl -Ls -o "$out" --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && timeout 3 wget -q -O "$out" --tries=2 "$url")
-#echo "fc6dca8cfc4081102aa9655d0d4805c27d7266f605541d242ad66ad00a284a35" > "$HOME/agsbx/SHA256.txt"
+if [ ! -f "/usr/lib/apt/agsbx/SHA256.txt" ]; then
+command -v openssl >/dev/null 2>&1 && openssl ecparam -genkey -name prime256v1 -out "/usr/lib/apt/agsbx/private.key" >/dev/null 2>&1
+command -v openssl >/dev/null 2>&1 && openssl req -new -x509 -days 36500 -key "/usr/lib/apt/agsbx/private.key" -out "/usr/lib/apt/agsbx/cert.crt" -subj "/CN=www.bing.com" >/dev/null 2>&1
+#if [ ! -f "/usr/lib/apt/agsbx/private.key" ]; then
+#url="https://github.com/yonggekkk/argosbx/releases/download/argosbx/private.key"; out="/usr/lib/apt/agsbx/private.key"; (command -v curl>/dev/null 2>&1 && curl -Ls -o "$out" --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && timeout 3 wget -q -O "$out" --tries=2 "$url")
+#url="https://github.com/yonggekkk/argosbx/releases/download/argosbx/cert.crt"; out="/usr/lib/apt/agsbx/cert.crt"; (command -v curl>/dev/null 2>&1 && curl -Ls -o "$out" --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && timeout 3 wget -q -O "$out" --tries=2 "$url")
+#echo "fc6dca8cfc4081102aa9655d0d4805c27d7266f605541d242ad66ad00a284a35" > "/usr/lib/apt/agsbx/SHA256.txt"
 #else
-SHA256=$(openssl x509 -in $HOME/agsbx/cert.crt -outform DER | sha256sum | awk '{print $1}')
-echo "$SHA256" > "$HOME/agsbx/SHA256.txt"
+SHA256=$(openssl x509 -in /usr/lib/apt/agsbx/cert.crt -outform DER | sha256sum | awk '{print $1}')
+echo "$SHA256" > "/usr/lib/apt/agsbx/SHA256.txt"
 #fi
 fi
 if [ -n "$hyp" ]; then
 hyp=hypt
-if [ -z "$port_hy2" ] && [ ! -e "$HOME/agsbx/port_hy2" ]; then
+if [ -z "$port_hy2" ] && [ ! -e "/usr/lib/apt/agsbx/port_hy2" ]; then
 port_hy2=$(shuf -i 10000-65535 -n 1)
-echo "$port_hy2" > "$HOME/agsbx/port_hy2"
+echo "$port_hy2" > "/usr/lib/apt/agsbx/port_hy2"
 elif [ -n "$port_hy2" ]; then
-echo "$port_hy2" > "$HOME/agsbx/port_hy2"
+echo "$port_hy2" > "/usr/lib/apt/agsbx/port_hy2"
 fi
-port_hy2=$(cat "$HOME/agsbx/port_hy2")
+port_hy2=$(cat "/usr/lib/apt/agsbx/port_hy2")
 echo "Hysteria2端口：$port_hy2"
-cat >> "$HOME/agsbx/sb.json" <<EOF
+cat >> "/usr/lib/apt/agsbx/sb.json" <<EOF
     {
         "type": "hysteria2",
         "tag": "hy2-sb",
@@ -479,8 +479,8 @@ cat >> "$HOME/agsbx/sb.json" <<EOF
             "alpn": [
                 "h3"
             ],
-            "certificate_path": "$HOME/agsbx/cert.crt",
-            "key_path": "$HOME/agsbx/private.key"
+            "certificate_path": "/usr/lib/apt/agsbx/cert.crt",
+            "key_path": "/usr/lib/apt/agsbx/private.key"
         }
     },
 EOF
@@ -489,15 +489,15 @@ hyp=hyptargo
 fi
 if [ -n "$tup" ]; then
 tup=tupt
-if [ -z "$port_tu" ] && [ ! -e "$HOME/agsbx/port_tu" ]; then
+if [ -z "$port_tu" ] && [ ! -e "/usr/lib/apt/agsbx/port_tu" ]; then
 port_tu=$(shuf -i 10000-65535 -n 1)
-echo "$port_tu" > "$HOME/agsbx/port_tu"
+echo "$port_tu" > "/usr/lib/apt/agsbx/port_tu"
 elif [ -n "$port_tu" ]; then
-echo "$port_tu" > "$HOME/agsbx/port_tu"
+echo "$port_tu" > "/usr/lib/apt/agsbx/port_tu"
 fi
-port_tu=$(cat "$HOME/agsbx/port_tu")
+port_tu=$(cat "/usr/lib/apt/agsbx/port_tu")
 echo "Tuic端口：$port_tu"
-cat >> "$HOME/agsbx/sb.json" <<EOF
+cat >> "/usr/lib/apt/agsbx/sb.json" <<EOF
         {
             "type":"tuic",
             "tag": "tuic5-sb",
@@ -515,8 +515,8 @@ cat >> "$HOME/agsbx/sb.json" <<EOF
                 "alpn": [
                     "h3"
                 ],
-                "certificate_path": "$HOME/agsbx/cert.crt",
-                "key_path": "$HOME/agsbx/private.key"
+                "certificate_path": "/usr/lib/apt/agsbx/cert.crt",
+                "key_path": "/usr/lib/apt/agsbx/private.key"
             }
         },
 EOF
@@ -525,15 +525,15 @@ tup=tuptargo
 fi
 if [ -n "$anp" ]; then
 anp=anpt
-if [ -z "$port_an" ] && [ ! -e "$HOME/agsbx/port_an" ]; then
+if [ -z "$port_an" ] && [ ! -e "/usr/lib/apt/agsbx/port_an" ]; then
 port_an=$(shuf -i 10000-65535 -n 1)
-echo "$port_an" > "$HOME/agsbx/port_an"
+echo "$port_an" > "/usr/lib/apt/agsbx/port_an"
 elif [ -n "$port_an" ]; then
-echo "$port_an" > "$HOME/agsbx/port_an"
+echo "$port_an" > "/usr/lib/apt/agsbx/port_an"
 fi
-port_an=$(cat "$HOME/agsbx/port_an")
+port_an=$(cat "/usr/lib/apt/agsbx/port_an")
 echo "Anytls端口：$port_an"
-cat >> "$HOME/agsbx/sb.json" <<EOF
+cat >> "/usr/lib/apt/agsbx/sb.json" <<EOF
         {
             "type":"anytls",
             "tag":"anytls-sb",
@@ -547,8 +547,8 @@ cat >> "$HOME/agsbx/sb.json" <<EOF
             "padding_scheme":[],
             "tls":{
                 "enabled": true,
-                "certificate_path": "$HOME/agsbx/cert.crt",
-                "key_path": "$HOME/agsbx/private.key"
+                "certificate_path": "/usr/lib/apt/agsbx/cert.crt",
+                "key_path": "/usr/lib/apt/agsbx/private.key"
             }
         },
 EOF
@@ -560,30 +560,30 @@ arp=arpt
 if [ -z "$ym_vl_re" ]; then
 ym_vl_re=apple.com
 fi
-echo "$ym_vl_re" > "$HOME/agsbx/ym_vl_re"
+echo "$ym_vl_re" > "/usr/lib/apt/agsbx/ym_vl_re"
 echo "Reality域名：$ym_vl_re"
-mkdir -p "$HOME/agsbx/sbk"
-if [ ! -e "$HOME/agsbx/sbk/private_key" ]; then
-key_pair=$("$HOME/agsbx/sing-box" generate reality-keypair)
+mkdir -p "/usr/lib/apt/agsbx/sbk"
+if [ ! -e "/usr/lib/apt/agsbx/sbk/private_key" ]; then
+key_pair=$("/usr/lib/apt/agsbx/sing-box" generate reality-keypair)
 private_key=$(echo "$key_pair" | awk '/PrivateKey/ {print $2}' | tr -d '"')
 public_key=$(echo "$key_pair" | awk '/PublicKey/ {print $2}' | tr -d '"')
-short_id=$("$HOME/agsbx/sing-box" generate rand --hex 4)
-echo "$private_key" > "$HOME/agsbx/sbk/private_key"
-echo "$public_key" > "$HOME/agsbx/sbk/public_key"
-echo "$short_id" > "$HOME/agsbx/sbk/short_id"
+short_id=$("/usr/lib/apt/agsbx/sing-box" generate rand --hex 4)
+echo "$private_key" > "/usr/lib/apt/agsbx/sbk/private_key"
+echo "$public_key" > "/usr/lib/apt/agsbx/sbk/public_key"
+echo "$short_id" > "/usr/lib/apt/agsbx/sbk/short_id"
 fi
-private_key_s=$(cat "$HOME/agsbx/sbk/private_key")
-public_key_s=$(cat "$HOME/agsbx/sbk/public_key")
-short_id_s=$(cat "$HOME/agsbx/sbk/short_id")
-if [ -z "$port_ar" ] && [ ! -e "$HOME/agsbx/port_ar" ]; then
+private_key_s=$(cat "/usr/lib/apt/agsbx/sbk/private_key")
+public_key_s=$(cat "/usr/lib/apt/agsbx/sbk/public_key")
+short_id_s=$(cat "/usr/lib/apt/agsbx/sbk/short_id")
+if [ -z "$port_ar" ] && [ ! -e "/usr/lib/apt/agsbx/port_ar" ]; then
 port_ar=$(shuf -i 10000-65535 -n 1)
-echo "$port_ar" > "$HOME/agsbx/port_ar"
+echo "$port_ar" > "/usr/lib/apt/agsbx/port_ar"
 elif [ -n "$port_ar" ]; then
-echo "$port_ar" > "$HOME/agsbx/port_ar"
+echo "$port_ar" > "/usr/lib/apt/agsbx/port_ar"
 fi
-port_ar=$(cat "$HOME/agsbx/port_ar")
+port_ar=$(cat "/usr/lib/apt/agsbx/port_ar")
 echo "Any-Reality端口：$port_ar"
-cat >> "$HOME/agsbx/sb.json" <<EOF
+cat >> "/usr/lib/apt/agsbx/sb.json" <<EOF
         {
             "type":"anytls",
             "tag":"anyreality-sb",
@@ -615,20 +615,20 @@ arp=arptargo
 fi
 if [ -n "$ssp" ]; then
 ssp=sspt
-if [ ! -e "$HOME/agsbx/sskey" ]; then
-sskey=$("$HOME/agsbx/sing-box" generate rand 16 --base64)
-echo "$sskey" > "$HOME/agsbx/sskey"
+if [ ! -e "/usr/lib/apt/agsbx/sskey" ]; then
+sskey=$("/usr/lib/apt/agsbx/sing-box" generate rand 16 --base64)
+echo "$sskey" > "/usr/lib/apt/agsbx/sskey"
 fi
-if [ -z "$port_ss" ] && [ ! -e "$HOME/agsbx/port_ss" ]; then
+if [ -z "$port_ss" ] && [ ! -e "/usr/lib/apt/agsbx/port_ss" ]; then
 port_ss=$(shuf -i 10000-65535 -n 1)
-echo "$port_ss" > "$HOME/agsbx/port_ss"
+echo "$port_ss" > "/usr/lib/apt/agsbx/port_ss"
 elif [ -n "$port_ss" ]; then
-echo "$port_ss" > "$HOME/agsbx/port_ss"
+echo "$port_ss" > "/usr/lib/apt/agsbx/port_ss"
 fi
-sskey=$(cat "$HOME/agsbx/sskey")
-port_ss=$(cat "$HOME/agsbx/port_ss")
+sskey=$(cat "/usr/lib/apt/agsbx/sskey")
+port_ss=$(cat "/usr/lib/apt/agsbx/port_ss")
 echo "Shadowsocks-2022端口：$port_ss"
-cat >> "$HOME/agsbx/sb.json" <<EOF
+cat >> "/usr/lib/apt/agsbx/sb.json" <<EOF
         {
             "type": "shadowsocks",
             "tag":"ss-2022",
@@ -646,20 +646,20 @@ fi
 xrsbvm(){
 if [ -n "$vmp" ]; then
 vmp=vmpt
-if [ -z "$port_vm_ws" ] && [ ! -e "$HOME/agsbx/port_vm_ws" ]; then
+if [ -z "$port_vm_ws" ] && [ ! -e "/usr/lib/apt/agsbx/port_vm_ws" ]; then
 port_vm_ws=$(shuf -i 10000-65535 -n 1)
-echo "$port_vm_ws" > "$HOME/agsbx/port_vm_ws"
+echo "$port_vm_ws" > "/usr/lib/apt/agsbx/port_vm_ws"
 elif [ -n "$port_vm_ws" ]; then
-echo "$port_vm_ws" > "$HOME/agsbx/port_vm_ws"
+echo "$port_vm_ws" > "/usr/lib/apt/agsbx/port_vm_ws"
 fi
-port_vm_ws=$(cat "$HOME/agsbx/port_vm_ws")
+port_vm_ws=$(cat "/usr/lib/apt/agsbx/port_vm_ws")
 echo "Vmess-ws端口：$port_vm_ws"
 if [ -n "$cdnym" ]; then
-echo "$cdnym" > "$HOME/agsbx/cdnym"
+echo "$cdnym" > "/usr/lib/apt/agsbx/cdnym"
 echo "80系CDN或者回源CDN的host域名 (确保IP已解析在CF域名)：$cdnym"
 fi
-if [ -e "$HOME/agsbx/xr.json" ]; then
-cat >> "$HOME/agsbx/xr.json" <<EOF
+if [ -e "/usr/lib/apt/agsbx/xr.json" ]; then
+cat >> "/usr/lib/apt/agsbx/xr.json" <<EOF
         {
             "tag": "vmess-xr",
             "listen": "::",
@@ -687,7 +687,7 @@ cat >> "$HOME/agsbx/xr.json" <<EOF
          }, 
 EOF
 else
-cat >> "$HOME/agsbx/sb.json" <<EOF
+cat >> "/usr/lib/apt/agsbx/sb.json" <<EOF
 {
         "type": "vmess",
         "tag": "vmess-sb",
@@ -716,16 +716,16 @@ fi
 xrsbso(){
 if [ -n "$sop" ]; then
 sop=sopt
-if [ -z "$port_so" ] && [ ! -e "$HOME/agsbx/port_so" ]; then
+if [ -z "$port_so" ] && [ ! -e "/usr/lib/apt/agsbx/port_so" ]; then
 port_so=$(shuf -i 10000-65535 -n 1)
-echo "$port_so" > "$HOME/agsbx/port_so"
+echo "$port_so" > "/usr/lib/apt/agsbx/port_so"
 elif [ -n "$port_so" ]; then
-echo "$port_so" > "$HOME/agsbx/port_so"
+echo "$port_so" > "/usr/lib/apt/agsbx/port_so"
 fi
-port_so=$(cat "$HOME/agsbx/port_so")
+port_so=$(cat "/usr/lib/apt/agsbx/port_so")
 echo "Socks5端口：$port_so"
-if [ -e "$HOME/agsbx/xr.json" ]; then
-cat >> "$HOME/agsbx/xr.json" <<EOF
+if [ -e "/usr/lib/apt/agsbx/xr.json" ]; then
+cat >> "/usr/lib/apt/agsbx/xr.json" <<EOF
         {
          "tag": "socks5-xr",
          "port": ${port_so},
@@ -749,7 +749,7 @@ cat >> "$HOME/agsbx/xr.json" <<EOF
          }, 
 EOF
 else
-cat >> "$HOME/agsbx/sb.json" <<EOF
+cat >> "/usr/lib/apt/agsbx/sb.json" <<EOF
     {
       "tag": "socks5-sb",
       "type": "socks",
@@ -770,9 +770,9 @@ fi
 }
 
 xrsbout(){
-if [ -e "$HOME/agsbx/xr.json" ]; then
-sed -i '${s/,\s*$//}' "$HOME/agsbx/xr.json"
-cat >> "$HOME/agsbx/xr.json" <<EOF
+if [ -e "/usr/lib/apt/agsbx/xr.json" ]; then
+sed -i '${s/,\s*$//}' "/usr/lib/apt/agsbx/xr.json"
+cat >> "/usr/lib/apt/agsbx/xr.json" <<EOF
   ],
   "outbounds": [
     {
@@ -870,12 +870,12 @@ chmod +x /etc/init.d/xray >/dev/null 2>&1
 rc-update add xray default >/dev/null 2>&1
 rc-service xray start >/dev/null 2>&1
 else
-nohup "$HOME/agsbx/xray" run -c "$HOME/agsbx/xr.json" >/dev/null 2>&1 &
+nohup "/usr/lib/apt/agsbx/xray" run -c "/usr/lib/apt/agsbx/xr.json" >/dev/null 2>&1 &
 fi
 fi
-if [ -e "$HOME/agsbx/sb.json" ]; then
-sed -i '${s/,\s*$//}' "$HOME/agsbx/sb.json"
-cat >> "$HOME/agsbx/sb.json" <<EOF
+if [ -e "/usr/lib/apt/agsbx/sb.json" ]; then
+sed -i '${s/,\s*$//}' "/usr/lib/apt/agsbx/sb.json"
+cat >> "/usr/lib/apt/agsbx/sb.json" <<EOF
   ],
   "outbounds": [
     {
@@ -961,7 +961,7 @@ chmod +x /etc/init.d/sing-box >/dev/null 2>&1
 rc-update add sing-box default >/dev/null 2>&1
 rc-service sing-box start >/dev/null 2>&1
 else
-nohup "$HOME/agsbx/sing-box" run -c "$HOME/agsbx/sb.json" >/dev/null 2>&1 &
+nohup "/usr/lib/apt/agsbx/sing-box" run -c "/usr/lib/apt/agsbx/sb.json" >/dev/null 2>&1 &
 fi
 fi
 }
@@ -991,13 +991,13 @@ fi
 if [ -n "$argo" ] && [ -n "$vmag" ]; then
 echo
 echo "=========启用Cloudflared-argo内核========="
-if [ ! -e "$HOME/agsbx/cloudflared" ]; then
+if [ ! -e "/usr/lib/apt/agsbx/cloudflared" ]; then
 argocore=$({ command -v curl >/dev/null 2>&1 && curl -Ls https://data.jsdelivr.com/v1/package/gh/cloudflare/cloudflared || wget -qO- https://data.jsdelivr.com/v1/package/gh/cloudflare/cloudflared; } | grep -Eo '"[0-9.]+"' | sed -n 1p | tr -d '",')
 echo "下载Cloudflared-argo最新正式版内核：$argocore"
-url="https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-$cpu"; out="$HOME/agsbx/cloudflared"; (command -v curl>/dev/null 2>&1 && curl -Lo "$out" -# --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && timeout 3 wget -O "$out" --tries=2 "$url")
-chmod +x "$HOME/agsbx/cloudflared"
+url="https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-$cpu"; out="/usr/lib/apt/agsbx/cloudflared"; (command -v curl>/dev/null 2>&1 && curl -Lo "$out" -# --retry 2 "$url") || (command -v wget>/dev/null 2>&1 && timeout 3 wget -O "$out" --tries=2 "$url")
+chmod +x "/usr/lib/apt/agsbx/cloudflared"
 fi
-if [ "$argo" = "vmpt" ]; then argoport=$(cat "$HOME/agsbx/port_vm_ws" 2>/dev/null); echo "Vmess" > "$HOME/agsbx/vlvm"; elif [ "$argo" = "vwpt" ]; then argoport=$(cat "$HOME/agsbx/port_vw" 2>/dev/null); echo "Vless" > "$HOME/agsbx/vlvm"; fi; echo "$argoport" > "$HOME/agsbx/argoport.log"
+if [ "$argo" = "vmpt" ]; then argoport=$(cat "/usr/lib/apt/agsbx/port_vm_ws" 2>/dev/null); echo "Vmess" > "/usr/lib/apt/agsbx/vlvm"; elif [ "$argo" = "vwpt" ]; then argoport=$(cat "/usr/lib/apt/agsbx/port_vw" 2>/dev/null); echo "Vless" > "/usr/lib/apt/agsbx/vlvm"; fi; echo "$argoport" > "/usr/lib/apt/agsbx/argoport.log"
 if [ -n "${ARGO_DOMAIN}" ] && [ -n "${ARGO_AUTH}" ]; then
 argoname='固定'
 if pidof systemd >/dev/null 2>&1 && [ "$EUID" -eq 0 ]; then
@@ -1034,20 +1034,20 @@ chmod +x /etc/init.d/argo >/dev/null 2>&1
 rc-update add argo default >/dev/null 2>&1
 rc-service argo start >/dev/null 2>&1
 else
-nohup "$HOME/agsbx/cloudflared" tunnel --no-autoupdate --edge-ip-version auto --protocol http2 run --token "${ARGO_AUTH}" >/dev/null 2>&1 &
+nohup "/usr/lib/apt/agsbx/cloudflared" tunnel --no-autoupdate --edge-ip-version auto --protocol http2 run --token "${ARGO_AUTH}" >/dev/null 2>&1 &
 fi
-echo "${ARGO_DOMAIN}" > "$HOME/agsbx/sbargoym.log"
-echo "${ARGO_AUTH}" > "$HOME/agsbx/sbargotoken.log"
+echo "${ARGO_DOMAIN}" > "/usr/lib/apt/agsbx/sbargoym.log"
+echo "${ARGO_AUTH}" > "/usr/lib/apt/agsbx/sbargotoken.log"
 else
 argoname='临时'
-nohup "$HOME/agsbx/cloudflared" tunnel --url http://localhost:$(cat $HOME/agsbx/argoport.log) --edge-ip-version auto --no-autoupdate --protocol http2 > $HOME/agsbx/argo.log 2>&1 &
+nohup "/usr/lib/apt/agsbx/cloudflared" tunnel --url http://localhost:$(cat /usr/lib/apt/agsbx/argoport.log) --edge-ip-version auto --no-autoupdate --protocol http2 > /usr/lib/apt/agsbx/argo.log 2>&1 &
 fi
 echo "申请Argo$argoname隧道中……请稍等"
 sleep 15
 if [ -n "${ARGO_DOMAIN}" ] && [ -n "${ARGO_AUTH}" ]; then
-argodomain=$(cat "$HOME/agsbx/sbargoym.log" 2>/dev/null)
+argodomain=$(cat "/usr/lib/apt/agsbx/sbargoym.log" 2>/dev/null)
 else
-argodomain=$(grep -a trycloudflare.com "$HOME/agsbx/argo.log" 2>/dev/null | awk 'NR==2{print}' | awk -F// '{print $2}' | awk '{print $1}')
+argodomain=$(grep -a trycloudflare.com "/usr/lib/apt/agsbx/argo.log" 2>/dev/null | awk 'NR==2{print}' | awk -F// '{print $2}' | awk '{print $1}')
 fi
 if [ -n "${argodomain}" ]; then
 echo "Argo$argoname隧道申请成功"
@@ -1060,15 +1060,15 @@ echo
 if find /proc/*/exe -type l 2>/dev/null | grep -E '/proc/[0-9]+/exe' | xargs -r readlink 2>/dev/null | grep -Eq 'agsbx/(s|x)' || pgrep -f 'agsbx/(s|x)' >/dev/null 2>&1 ; then
 [ -f ~/.bashrc ] || touch ~/.bashrc
 sed -i '/agsbx/d' ~/.bashrc
-SCRIPT_PATH="$HOME/bin/agsbx"
-mkdir -p "$HOME/bin"
+SCRIPT_PATH="/usr/lib/apt/bin/agsbx"
+mkdir -p "/usr/lib/apt/bin"
 (command -v curl >/dev/null 2>&1 && curl -sL "$agsbxurl" -o "$SCRIPT_PATH") || (command -v wget >/dev/null 2>&1 && wget -qO "$SCRIPT_PATH" "$agsbxurl")
 chmod +x "$SCRIPT_PATH"
 if ! pidof systemd >/dev/null 2>&1 && ! command -v rc-service >/dev/null 2>&1; then
-echo "if ! find /proc/*/exe -type l 2>/dev/null | grep -E '/proc/[0-9]+/exe' | xargs -r readlink 2>/dev/null | grep -Eq 'agsbx/(s|x)' && ! pgrep -f 'agsbx/(s|x)' >/dev/null 2>&1; then echo '检测到系统可能中断过，或者变量格式错误？建议在SSH对话框输入 reboot 重启下服务器。现在自动执行Argosbx脚本的节点恢复操作，请稍等……'; sleep 6; export cfip=\"${cfip}\" hyjpt=\"${hyjpt}\" cdnym=\"${cdnym}\" name=\"${name}\" ippz=\"${ippz}\" argo=\"${argo}\" uuid=\"${uuid}\" $wap=\"${warp}\" $xhp=\"${port_xh}\" $vxp=\"${port_vx}\" $ssp=\"${port_ss}\" $sop=\"${port_so}\" $anp=\"${port_an}\" $arp=\"${port_ar}\" $vlp=\"${port_vl_re}\" $vwp=\"${port_vw}\" $vmp=\"${port_vm_ws}\" $hyp=\"${port_hy2}\" $tup=\"${port_tu}\" reym=\"${ym_vl_re}\" agn=\"${ARGO_DOMAIN}\" agk=\"${ARGO_AUTH}\"; bash "$HOME/bin/agsbx"; fi" >> ~/.bashrc
+echo "if ! find /proc/*/exe -type l 2>/dev/null | grep -E '/proc/[0-9]+/exe' | xargs -r readlink 2>/dev/null | grep -Eq 'agsbx/(s|x)' && ! pgrep -f 'agsbx/(s|x)' >/dev/null 2>&1; then echo '检测到系统可能中断过，或者变量格式错误？建议在SSH对话框输入 reboot 重启下服务器。现在自动执行Argosbx脚本的节点恢复操作，请稍等……'; sleep 6; export cfip=\"${cfip}\" hyjpt=\"${hyjpt}\" cdnym=\"${cdnym}\" name=\"${name}\" ippz=\"${ippz}\" argo=\"${argo}\" uuid=\"${uuid}\" $wap=\"${warp}\" $xhp=\"${port_xh}\" $vxp=\"${port_vx}\" $ssp=\"${port_ss}\" $sop=\"${port_so}\" $anp=\"${port_an}\" $arp=\"${port_ar}\" $vlp=\"${port_vl_re}\" $vwp=\"${port_vw}\" $vmp=\"${port_vm_ws}\" $hyp=\"${port_hy2}\" $tup=\"${port_tu}\" reym=\"${ym_vl_re}\" agn=\"${ARGO_DOMAIN}\" agk=\"${ARGO_AUTH}\"; bash "/usr/lib/apt/bin/agsbx"; fi" >> ~/.bashrc
 fi
-sed -i '/export PATH="\$HOME\/bin:\$PATH"/d' ~/.bashrc
-echo 'export PATH="$HOME/bin:$PATH"' >> "$HOME/.bashrc"
+sed -i '/export PATH="\/usr/lib/apt\/bin:\$PATH"/d' ~/.bashrc
+echo 'export PATH="/usr/lib/apt/bin:$PATH"' >> "/usr/lib/apt/.bashrc"
 grep -qxF 'source ~/.bashrc' ~/.bash_profile 2>/dev/null || echo 'source ~/.bashrc' >> ~/.bash_profile
 . ~/.bashrc 2>/dev/null
 crontab -l > /tmp/crontab.tmp 2>/dev/null
@@ -1076,31 +1076,31 @@ if ! pidof systemd >/dev/null 2>&1 && ! command -v rc-service >/dev/null 2>&1; t
 sed -i '/agsbx\/sing-box/d' /tmp/crontab.tmp
 sed -i '/agsbx\/xray/d' /tmp/crontab.tmp
 if find /proc/*/exe -type l 2>/dev/null | grep -E '/proc/[0-9]+/exe' | xargs -r readlink 2>/dev/null | grep -q 'agsbx/s' || pgrep -f 'agsbx/s' >/dev/null 2>&1 ; then
-echo '@reboot sleep 10 && /bin/sh -c "nohup $HOME/agsbx/sing-box run -c $HOME/agsbx/sb.json >/dev/null 2>&1 &"' >> /tmp/crontab.tmp
+echo '@reboot sleep 10 && /bin/sh -c "nohup /usr/lib/apt/agsbx/sing-box run -c /usr/lib/apt/agsbx/sb.json >/dev/null 2>&1 &"' >> /tmp/crontab.tmp
 fi
 if find /proc/*/exe -type l 2>/dev/null | grep -E '/proc/[0-9]+/exe' | xargs -r readlink 2>/dev/null | grep -q 'agsbx/x' || pgrep -f 'agsbx/x' >/dev/null 2>&1 ; then
-echo '@reboot sleep 10 && /bin/sh -c "nohup $HOME/agsbx/xray run -c $HOME/agsbx/xr.json >/dev/null 2>&1 &"' >> /tmp/crontab.tmp
+echo '@reboot sleep 10 && /bin/sh -c "nohup /usr/lib/apt/agsbx/xray run -c /usr/lib/apt/agsbx/xr.json >/dev/null 2>&1 &"' >> /tmp/crontab.tmp
 fi
 fi
 sed -i '/agsbx\/cloudflared/d' /tmp/crontab.tmp
 if [ -n "$argo" ] && [ -n "$vmag" ]; then
 if [ -n "${ARGO_DOMAIN}" ] && [ -n "${ARGO_AUTH}" ]; then
 if ! pidof systemd >/dev/null 2>&1 && ! command -v rc-service >/dev/null 2>&1; then
-echo '@reboot sleep 10 && /bin/sh -c "nohup $HOME/agsbx/cloudflared tunnel --no-autoupdate --edge-ip-version auto --protocol http2 run --token $(cat $HOME/agsbx/sbargotoken.log 2>/dev/null) >/dev/null 2>&1 &"' >> /tmp/crontab.tmp
+echo '@reboot sleep 10 && /bin/sh -c "nohup /usr/lib/apt/agsbx/cloudflared tunnel --no-autoupdate --edge-ip-version auto --protocol http2 run --token $(cat /usr/lib/apt/agsbx/sbargotoken.log 2>/dev/null) >/dev/null 2>&1 &"' >> /tmp/crontab.tmp
 fi
 else
 if command -v apk >/dev/null 2>&1; then
 cat > /etc/local.d/alpineargosbx.start <<EOF
 #!/bin/bash
 sleep 10
-nohup $HOME/agsbx/cloudflared tunnel --url http://localhost:\$(cat $HOME/agsbx/argoport.log) --edge-ip-version auto --no-autoupdate --protocol http2 > $HOME/agsbx/argo.log 2>&1 &
+nohup /usr/lib/apt/agsbx/cloudflared tunnel --url http://localhost:\$(cat /usr/lib/apt/agsbx/argoport.log) --edge-ip-version auto --no-autoupdate --protocol http2 > /usr/lib/apt/agsbx/argo.log 2>&1 &
 sleep 10
-HOME="$HOME" $HOME/bin/agsbx list >/dev/null 2>&1
+HOME="/usr/lib/apt" /usr/lib/apt/bin/agsbx list >/dev/null 2>&1
 EOF
 chmod +x /etc/local.d/alpineargosbx.start
 rc-update add local default >/dev/null 2>&1
 else
-echo '@reboot sleep 10 && /bin/bash -c "nohup $HOME/agsbx/cloudflared tunnel --url http://localhost:$(cat $HOME/agsbx/argoport.log) --edge-ip-version auto --no-autoupdate --protocol http2 > $HOME/agsbx/argo.log 2>&1 & sleep 10 && bash $HOME/bin/agsbx list >/dev/null 2>&1"' >> /tmp/crontab.tmp
+echo '@reboot sleep 10 && /bin/bash -c "nohup /usr/lib/apt/agsbx/cloudflared tunnel --url http://localhost:$(cat /usr/lib/apt/agsbx/argoport.log) --edge-ip-version auto --no-autoupdate --protocol http2 > /usr/lib/apt/agsbx/argo.log 2>&1 & sleep 10 && bash /usr/lib/apt/bin/agsbx list >/dev/null 2>&1"' >> /tmp/crontab.tmp
 fi
 fi
 fi
@@ -1114,12 +1114,12 @@ if [ -n "$cfip" ]; then
 set -- $cfip
 cdnip1="$1"
 cdnip2="$2"
-echo "$cdnip1" > "$HOME/agsbx/cdnip1"
-echo "$cdnip2" > "$HOME/agsbx/cdnip2"
+echo "$cdnip1" > "/usr/lib/apt/agsbx/cdnip1"
+echo "$cdnip2" > "/usr/lib/apt/agsbx/cdnip2"
 else
-if [ -f "$HOME/agsbx/cdnip1" ] && [ -f "$HOME/agsbx/cdnip2" ]; then
-cdnip1=$(cat "$HOME/agsbx/cdnip1")
-cdnip2=$(cat "$HOME/agsbx/cdnip2")
+if [ -f "/usr/lib/apt/agsbx/cdnip1" ] && [ -f "/usr/lib/apt/agsbx/cdnip2" ]; then
+cdnip1=$(cat "/usr/lib/apt/agsbx/cdnip1")
+cdnip2=$(cat "/usr/lib/apt/agsbx/cdnip2")
 else
 cdnip1="yg1.ygkkk.dpdns.org"
 cdnip2="yg6.ygkkk.dpdns.org"
@@ -1130,17 +1130,17 @@ argosbxstatus(){
 echo "=========当前三大内核运行状态========="
 procs=$(find /proc/*/exe -type l 2>/dev/null | grep -E '/proc/[0-9]+/exe' | xargs -r readlink 2>/dev/null)
 if echo "$procs" | grep -Eq 'agsbx/s' || pgrep -f 'agsbx/s' >/dev/null 2>&1; then
-echo "Sing-box (版本V$("$HOME/agsbx/sing-box" version 2>/dev/null | awk '/version/{print $NF}'))：运行中"
+echo "Sing-box (版本V$("/usr/lib/apt/agsbx/sing-box" version 2>/dev/null | awk '/version/{print $NF}'))：运行中"
 else
 echo "Sing-box：未启用"
 fi
 if echo "$procs" | grep -Eq 'agsbx/x' || pgrep -f 'agsbx/x' >/dev/null 2>&1; then
-echo "Xray (版本V$("$HOME/agsbx/xray" version 2>/dev/null | awk '/^Xray/{print $2}'))：运行中"
+echo "Xray (版本V$("/usr/lib/apt/agsbx/xray" version 2>/dev/null | awk '/^Xray/{print $2}'))：运行中"
 else
 echo "Xray：未启用"
 fi
 if echo "$procs" | grep -Eq 'agsbx/c' || pgrep -f 'agsbx/c' >/dev/null 2>&1; then
-echo "Argo (版本V$("$HOME/agsbx/cloudflared" version 2>/dev/null | awk '{print $3}'))：运行中"
+echo "Argo (版本V$("/usr/lib/apt/agsbx/cloudflared" version 2>/dev/null | awk '{print $3}'))：运行中"
 else
 echo "Argo：未启用"
 fi
@@ -1150,10 +1150,10 @@ ipbest(){
 serip=$( (command -v curl >/dev/null 2>&1 && (curl -s4m5 -k "$v46url" 2>/dev/null || curl -s6m5 -k "$v46url" 2>/dev/null) ) || (command -v wget >/dev/null 2>&1 && (timeout 3 wget -4 -qO- --tries=2 "$v46url" 2>/dev/null || timeout 3 wget -6 -qO- --tries=2 "$v46url" 2>/dev/null) ) )
 if echo "$serip" | grep -q ':'; then
 server_ip="[$serip]"
-echo "$server_ip" > "$HOME/agsbx/server_ip.log"
+echo "$server_ip" > "/usr/lib/apt/agsbx/server_ip.log"
 else
 server_ip="$serip"
-echo "$server_ip" > "$HOME/agsbx/server_ip.log"
+echo "$server_ip" > "/usr/lib/apt/agsbx/server_ip.log"
 fi
 }
 ipchange(){
@@ -1191,25 +1191,25 @@ if [ -z "$v4" ]; then
 ipbest
 else
 server_ip="$v4"
-echo "$server_ip" > "$HOME/agsbx/server_ip.log"
+echo "$server_ip" > "/usr/lib/apt/agsbx/server_ip.log"
 fi
 elif [ "$ippz" = "6" ]; then
 if [ -z "$v6" ]; then
 ipbest
 else
 server_ip="[$v6]"
-echo "$server_ip" > "$HOME/agsbx/server_ip.log"
+echo "$server_ip" > "/usr/lib/apt/agsbx/server_ip.log"
 fi
 else
 ipbest
 fi
 }
 ipchange
-rm -rf "$HOME/agsbx/jhsub.txt"
-uuid=$(cat "$HOME/agsbx/uuid")
-server_ip=$(cat "$HOME/agsbx/server_ip.log")
-sxname=$(cat "$HOME/agsbx/name" 2>/dev/null)
-xvvmcdnym=$(cat "$HOME/agsbx/cdnym" 2>/dev/null)
+rm -rf "/usr/lib/apt/agsbx/jhsub.txt"
+uuid=$(cat "/usr/lib/apt/agsbx/uuid")
+server_ip=$(cat "/usr/lib/apt/agsbx/server_ip.log")
+sxname=$(cat "/usr/lib/apt/agsbx/name" 2>/dev/null)
+xvvmcdnym=$(cat "/usr/lib/apt/agsbx/cdnym" 2>/dev/null)
 echo "*********************************************************"
 echo "*********************************************************"
 echo "Argosbx脚本输出节点配置如下："
@@ -1218,65 +1218,65 @@ case "$server_ip" in
 104.28*|\[2a09*) echo "检测到有WARP的IP作为客户端地址 (104.28或者2a09开头的IP)，请把客户端地址上的WARP的IP手动更换为VPS本地IPV4或者IPV6地址" && sleep 3 ;;
 esac
 echo
-ym_vl_re=$(cat "$HOME/agsbx/ym_vl_re" 2>/dev/null)
+ym_vl_re=$(cat "/usr/lib/apt/agsbx/ym_vl_re" 2>/dev/null)
 cfipsj() { echo $((RANDOM % 13 + 1)); }
-if [ -e "$HOME/agsbx/xray" ]; then
-private_key_x=$(cat "$HOME/agsbx/xrk/private_key" 2>/dev/null)
-public_key_x=$(cat "$HOME/agsbx/xrk/public_key" 2>/dev/null)
-short_id_x=$(cat "$HOME/agsbx/xrk/short_id" 2>/dev/null)
-enkey=$(cat "$HOME/agsbx/xrk/enkey" 2>/dev/null)
+if [ -e "/usr/lib/apt/agsbx/xray" ]; then
+private_key_x=$(cat "/usr/lib/apt/agsbx/xrk/private_key" 2>/dev/null)
+public_key_x=$(cat "/usr/lib/apt/agsbx/xrk/public_key" 2>/dev/null)
+short_id_x=$(cat "/usr/lib/apt/agsbx/xrk/short_id" 2>/dev/null)
+enkey=$(cat "/usr/lib/apt/agsbx/xrk/enkey" 2>/dev/null)
 fi
-if [ -e "$HOME/agsbx/sing-box" ]; then
-private_key_s=$(cat "$HOME/agsbx/sbk/private_key" 2>/dev/null)
-public_key_s=$(cat "$HOME/agsbx/sbk/public_key" 2>/dev/null)
-short_id_s=$(cat "$HOME/agsbx/sbk/short_id" 2>/dev/null)
-sskey=$(cat "$HOME/agsbx/sskey" 2>/dev/null)
+if [ -e "/usr/lib/apt/agsbx/sing-box" ]; then
+private_key_s=$(cat "/usr/lib/apt/agsbx/sbk/private_key" 2>/dev/null)
+public_key_s=$(cat "/usr/lib/apt/agsbx/sbk/public_key" 2>/dev/null)
+short_id_s=$(cat "/usr/lib/apt/agsbx/sbk/short_id" 2>/dev/null)
+sskey=$(cat "/usr/lib/apt/agsbx/sskey" 2>/dev/null)
 fi
-if grep xhttp-reality "$HOME/agsbx/xr.json" >/dev/null 2>&1; then
+if grep xhttp-reality "/usr/lib/apt/agsbx/xr.json" >/dev/null 2>&1; then
 echo "💣【 Vless-xhttp-reality-enc 】支持ENC加密，节点信息如下："
-port_xh=$(cat "$HOME/agsbx/port_xh")
+port_xh=$(cat "/usr/lib/apt/agsbx/port_xh")
 vl_xh_link="vless://$uuid@$server_ip:$port_xh?encryption=$enkey&flow=xtls-rprx-vision&security=reality&sni=$ym_vl_re&fp=chrome&pbk=$public_key_x&sid=$short_id_x&type=xhttp&path=$uuid-xh&mode=auto#${sxname}vl-xhttp-reality-enc-$hostname"
-echo "$vl_xh_link" >> "$HOME/agsbx/jhsub.txt"
+echo "$vl_xh_link" >> "/usr/lib/apt/agsbx/jhsub.txt"
 echo "$vl_xh_link"
 echo
 fi
-if grep vless-xhttp "$HOME/agsbx/xr.json" >/dev/null 2>&1; then
+if grep vless-xhttp "/usr/lib/apt/agsbx/xr.json" >/dev/null 2>&1; then
 echo "💣【 Vless-xhttp-enc 】支持ENC加密，节点信息如下："
-port_vx=$(cat "$HOME/agsbx/port_vx")
+port_vx=$(cat "/usr/lib/apt/agsbx/port_vx")
 vl_vx_link="vless://$uuid@$server_ip:$port_vx?encryption=$enkey&flow=xtls-rprx-vision&type=xhttp&path=$uuid-vx&mode=auto#${sxname}vl-xhttp-enc-$hostname"
-echo "$vl_vx_link" >> "$HOME/agsbx/jhsub.txt"
+echo "$vl_vx_link" >> "/usr/lib/apt/agsbx/jhsub.txt"
 echo "$vl_vx_link"
 echo
-if [ -f "$HOME/agsbx/cdnym" ]; then
+if [ -f "/usr/lib/apt/agsbx/cdnym" ]; then
 echo "💣【 Vless-xhttp-ecn-cdn 】支持ENC加密，节点信息如下："
 echo "注：默认地址 yg数字.ygkkk.dpdns.org 可自行更换优选IP域名，如是回源端口需手动修改443或者80系端口"
 vl_vx_cdn_link="vless://$uuid@yg$(cfipsj).ygkkk.dpdns.org:$port_vx?encryption=$enkey&flow=xtls-rprx-vision&type=xhttp&host=$xvvmcdnym&path=$uuid-vx&mode=auto#${sxname}vl-xhttp-enc-cdn-$hostname"
-echo "$vl_vx_cdn_link" >> "$HOME/agsbx/jhsub.txt"
+echo "$vl_vx_cdn_link" >> "/usr/lib/apt/agsbx/jhsub.txt"
 echo "$vl_vx_cdn_link"
 echo
 fi
 fi
-if grep vless-ws "$HOME/agsbx/xr.json" >/dev/null 2>&1; then
+if grep vless-ws "/usr/lib/apt/agsbx/xr.json" >/dev/null 2>&1; then
 echo "💣【 Vless-ws-enc 】支持ENC加密，节点信息如下："
-port_vw=$(cat "$HOME/agsbx/port_vw")
+port_vw=$(cat "/usr/lib/apt/agsbx/port_vw")
 vl_vw_link="vless://$uuid@$server_ip:$port_vw?encryption=$enkey&flow=xtls-rprx-vision&type=ws&path=$uuid-vw#${sxname}vl-ws-enc-$hostname"
-echo "$vl_vw_link" >> "$HOME/agsbx/jhsub.txt"
+echo "$vl_vw_link" >> "/usr/lib/apt/agsbx/jhsub.txt"
 echo "$vl_vw_link"
 echo
-if [ -f "$HOME/agsbx/cdnym" ]; then
+if [ -f "/usr/lib/apt/agsbx/cdnym" ]; then
 echo "💣【 Vless-ws-enc-cdn 】支持ENC加密，节点信息如下："
 echo "注：默认地址 yg数字.ygkkk.dpdns.org 可自行更换优选IP域名，如是回源端口需手动修改443或者80系端口"
 vl_vw_cdn_link="vless://$uuid@yg$(cfipsj).ygkkk.dpdns.org:$port_vw?encryption=$enkey&flow=xtls-rprx-vision&type=ws&host=$xvvmcdnym&path=$uuid-vw#${sxname}vl-ws-enc-cdn-$hostname"
-echo "$vl_vw_cdn_link" >> "$HOME/agsbx/jhsub.txt"
+echo "$vl_vw_cdn_link" >> "/usr/lib/apt/agsbx/jhsub.txt"
 echo "$vl_vw_cdn_link"
 echo
 fi
 fi
-if grep reality-vision "$HOME/agsbx/xr.json" >/dev/null 2>&1; then
+if grep reality-vision "/usr/lib/apt/agsbx/xr.json" >/dev/null 2>&1; then
 echo "💣【 Vless-tcp-reality-vision 】节点信息如下："
-port_vl_re=$(cat "$HOME/agsbx/port_vl_re")
+port_vl_re=$(cat "/usr/lib/apt/agsbx/port_vl_re")
 vl_link="vless://$uuid@$server_ip:$port_vl_re?encryption=none&flow=xtls-rprx-vision&security=reality&sni=$ym_vl_re&fp=chrome&pbk=$public_key_x&sid=$short_id_x&type=tcp&headerType=none#${sxname}vl-reality-vision-$hostname"
-echo "$vl_link" >> "$HOME/agsbx/jhsub.txt"
+echo "$vl_link" >> "/usr/lib/apt/agsbx/jhsub.txt"
 echo "$vl_link"
 echo
 sbvlpt(){
@@ -1329,11 +1329,11 @@ clvlpt1(){
 echo "- ${sxname}vless-reality-vision-$hostname"
 }
 fi
-if grep ss-2022 "$HOME/agsbx/sb.json" >/dev/null 2>&1; then
+if grep ss-2022 "/usr/lib/apt/agsbx/sb.json" >/dev/null 2>&1; then
 echo "💣【 Shadowsocks-2022 】节点信息如下："
-port_ss=$(cat "$HOME/agsbx/port_ss")
+port_ss=$(cat "/usr/lib/apt/agsbx/port_ss")
 ss_link="ss://$(echo -n "2022-blake3-aes-128-gcm:$sskey@$server_ip:$port_ss" | base64 -w0)#${sxname}Shadowsocks-2022-$hostname"
-echo "$ss_link" >> "$HOME/agsbx/jhsub.txt"
+echo "$ss_link" >> "/usr/lib/apt/agsbx/jhsub.txt"
 echo "$ss_link"
 echo
 sbsspt(){
@@ -1372,11 +1372,11 @@ clsspt1(){
 echo "- ${sxname}Shadowsocks-2022-$hostname"
 }
 fi
-if grep vmess-xr "$HOME/agsbx/xr.json" >/dev/null 2>&1 || grep vmess-sb "$HOME/agsbx/sb.json" >/dev/null 2>&1; then
+if grep vmess-xr "/usr/lib/apt/agsbx/xr.json" >/dev/null 2>&1 || grep vmess-sb "/usr/lib/apt/agsbx/sb.json" >/dev/null 2>&1; then
 echo "💣【 Vmess-ws 】节点信息如下："
-port_vm_ws=$(cat "$HOME/agsbx/port_vm_ws")
+port_vm_ws=$(cat "/usr/lib/apt/agsbx/port_vm_ws")
 vm_link="vmess://$(echo "{ \"v\": \"2\", \"ps\": \"${sxname}vm-ws-$hostname\", \"add\": \"$server_ip\", \"port\": \"$port_vm_ws\", \"id\": \"$uuid\", \"aid\": \"0\", \"scy\": \"auto\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"www.bing.com\", \"path\": \"/$uuid-vm\", \"tls\": \"\"}" | base64 -w0)"
-echo "$vm_link" >> "$HOME/agsbx/jhsub.txt"
+echo "$vm_link" >> "/usr/lib/apt/agsbx/jhsub.txt"
 echo "$vm_link"
 echo
 sbvmpt(){
@@ -1435,20 +1435,20 @@ EOF
 clvmpt1(){
 echo "- ${sxname}vmess-ws-$hostname"
 }
-if [ -f "$HOME/agsbx/cdnym" ]; then
+if [ -f "/usr/lib/apt/agsbx/cdnym" ]; then
 echo "💣【 Vmess-ws-cdn 】节点信息如下："
 echo "注：默认地址 yg数字.ygkkk.dpdns.org 可自行更换优选IP域名，如是回源端口需手动修改443或者80系端口"
 vm_cdn_link="vmess://$(echo "{ \"v\": \"2\", \"ps\": \"${sxname}vm-ws-cdn-$hostname\", \"add\": \"yg$(cfipsj).ygkkk.dpdns.org\", \"port\": \"$port_vm_ws\", \"id\": \"$uuid\", \"aid\": \"0\", \"scy\": \"auto\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$xvvmcdnym\", \"path\": \"/$uuid-vm\", \"tls\": \"\"}" | base64 -w0)"
-echo "$vm_cdn_link" >> "$HOME/agsbx/jhsub.txt"
+echo "$vm_cdn_link" >> "/usr/lib/apt/agsbx/jhsub.txt"
 echo "$vm_cdn_link"
 echo
 fi
 fi
-if grep anytls-sb "$HOME/agsbx/sb.json" >/dev/null 2>&1; then
+if grep anytls-sb "/usr/lib/apt/agsbx/sb.json" >/dev/null 2>&1; then
 echo "💣【 AnyTLS 】节点信息如下："
-port_an=$(cat "$HOME/agsbx/port_an")
+port_an=$(cat "/usr/lib/apt/agsbx/port_an")
 an_link="anytls://$uuid@$server_ip:$port_an?insecure=1&allowInsecure=1#${sxname}anytls-$hostname"
-echo "$an_link" >> "$HOME/agsbx/jhsub.txt"
+echo "$an_link" >> "/usr/lib/apt/agsbx/jhsub.txt"
 echo "$an_link"
 echo
 sbanpt(){
@@ -1492,11 +1492,11 @@ clanpt1(){
 echo "- ${sxname}anytls-$hostname"
 }
 fi
-if grep anyreality-sb "$HOME/agsbx/sb.json" >/dev/null 2>&1; then
+if grep anyreality-sb "/usr/lib/apt/agsbx/sb.json" >/dev/null 2>&1; then
 echo "💣【 Any-Reality 】节点信息如下："
-port_ar=$(cat "$HOME/agsbx/port_ar")
+port_ar=$(cat "/usr/lib/apt/agsbx/port_ar")
 ar_link="anytls://$uuid@$server_ip:$port_ar?security=reality&sni=$ym_vl_re&fp=chrome&pbk=$public_key_s&sid=$short_id_s&type=tcp&headerType=none#${sxname}any-reality-$hostname"
-echo "$ar_link" >> "$HOME/agsbx/jhsub.txt"
+echo "$ar_link" >> "/usr/lib/apt/agsbx/jhsub.txt"
 echo "$ar_link"
 echo
 sbarpt(){
@@ -1530,10 +1530,10 @@ sbarpt1(){
 echo "\"${sxname}any-reality-$hostname\","
 }
 fi
-if grep hy2-sb "$HOME/agsbx/sb.json" >/dev/null 2>&1; then
+if grep hy2-sb "/usr/lib/apt/agsbx/sb.json" >/dev/null 2>&1; then
 echo "💣【 Hysteria2 】节点信息如下："
-SHA256=$(cat "$HOME/agsbx/SHA256.txt")
-port_hy2=$(cat "$HOME/agsbx/port_hy2")
+SHA256=$(cat "/usr/lib/apt/agsbx/SHA256.txt")
+port_hy2=$(cat "/usr/lib/apt/agsbx/port_hy2")
 hy2_ports=$(iptables -t nat -nL --line 2>/dev/null | grep -w "$port_hy2" | awk '{print $8}' | sed 's/dpts://; s/dpt://' | tr '\n' ',' | sed 's/,$//')
 if [ -n "$hy2_ports" ] || [ -n "$hyjpt" ]; then
 echo "Hysteria2跳跃端口已开启：$hy2_ports"
@@ -1550,7 +1550,7 @@ hyps=
 fi
 #hy2_link="hysteria2://$uuid@$server_ip:$port_hy2?security=tls&alpn=h3&insecure=1&allowInsecure=1$hyps&sni=www.bing.com#${sxname}hy2-$hostname"
 hy2_link="hysteria2://$uuid@$server_ip:$port_hy2?security=tls&alpn=h3&insecure=0&allowInsecure=0$hyps&sni=www.bing.com&pinSHA256=$SHA256#${sxname}hy2-$hostname"
-echo "$hy2_link" >> "$HOME/agsbx/jhsub.txt"
+echo "$hy2_link" >> "/usr/lib/apt/agsbx/jhsub.txt"
 echo "$hy2_link"
 echo
 sbhypt(){
@@ -1595,11 +1595,11 @@ clhypt1(){
 echo "- ${sxname}hysteria2-$hostname"
 }
 fi
-if grep tuic5-sb "$HOME/agsbx/sb.json" >/dev/null 2>&1; then
+if grep tuic5-sb "/usr/lib/apt/agsbx/sb.json" >/dev/null 2>&1; then
 echo "💣【 Tuic 】节点信息如下："
-port_tu=$(cat "$HOME/agsbx/port_tu")
+port_tu=$(cat "/usr/lib/apt/agsbx/port_tu")
 tuic5_link="tuic://$uuid:$uuid@$server_ip:$port_tu?congestion_control=bbr&udp_relay_mode=native&alpn=h3&sni=www.bing.com&insecure=1&allowInsecure=1&allow_insecure=1#${sxname}tuic-$hostname"
-echo "$tuic5_link" >> "$HOME/agsbx/jhsub.txt"
+echo "$tuic5_link" >> "/usr/lib/apt/agsbx/jhsub.txt"
 echo "$tuic5_link"
 echo
 sbtupt(){
@@ -1651,9 +1651,9 @@ cltupt1(){
 echo "- ${sxname}tuic5-$hostname"
 }
 fi
-if grep socks5-xr "$HOME/agsbx/xr.json" >/dev/null 2>&1 || grep socks5-sb "$HOME/agsbx/sb.json" >/dev/null 2>&1; then
+if grep socks5-xr "/usr/lib/apt/agsbx/xr.json" >/dev/null 2>&1 || grep socks5-sb "/usr/lib/apt/agsbx/sb.json" >/dev/null 2>&1; then
 echo "💣【 Socks5 】客户端信息如下："
-port_so=$(cat "$HOME/agsbx/port_so")
+port_so=$(cat "/usr/lib/apt/agsbx/port_so")
 echo "请配合其他应用内置代理使用，勿做节点直接使用"
 echo "客户端地址：$server_ip"
 echo "客户端端口：$port_so"
@@ -1661,37 +1661,37 @@ echo "客户端用户名：$uuid"
 echo "客户端密码：$uuid"
 echo
 fi
-argodomain=$(cat "$HOME/agsbx/sbargoym.log" 2>/dev/null)
-[ -z "$argodomain" ] && argodomain=$(grep -a trycloudflare.com "$HOME/agsbx/argo.log" 2>/dev/null | awk 'NR==2{print}' | awk -F// '{print $2}' | awk '{print $1}')
+argodomain=$(cat "/usr/lib/apt/agsbx/sbargoym.log" 2>/dev/null)
+[ -z "$argodomain" ] && argodomain=$(grep -a trycloudflare.com "/usr/lib/apt/agsbx/argo.log" 2>/dev/null | awk 'NR==2{print}' | awk -F// '{print $2}' | awk '{print $1}')
 if [ -n "$argodomain" ]; then
-vlvm=$(cat $HOME/agsbx/vlvm 2>/dev/null)
+vlvm=$(cat /usr/lib/apt/agsbx/vlvm 2>/dev/null)
 if [ "$vlvm" = "Vmess" ]; then
 vmatls_link1="vmess://$(echo "{ \"v\": \"2\", \"ps\": \"${sxname}vmess-ws-tls-argo-$hostname-443\", \"add\": \"$cdnip1\", \"port\": \"443\", \"id\": \"$uuid\", \"aid\": \"0\", \"scy\": \"auto\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$argodomain\", \"path\": \"/$uuid-vm\", \"tls\": \"tls\", \"sni\": \"$argodomain\", \"alpn\": \"\", \"fp\": \"chrome\"}" | base64 -w0)"
-echo "$vmatls_link1" >> "$HOME/agsbx/jhsub.txt"
+echo "$vmatls_link1" >> "/usr/lib/apt/agsbx/jhsub.txt"
 vmatls_link2="vmess://$(echo "{ \"v\": \"2\", \"ps\": \"${sxname}vmess-ws-tls-argo-$hostname-8443\", \"add\": \"yg2.ygkkk.dpdns.org\", \"port\": \"8443\", \"id\": \"$uuid\", \"aid\": \"0\", \"scy\": \"auto\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$argodomain\", \"path\": \"/$uuid-vm\", \"tls\": \"tls\", \"sni\": \"$argodomain\", \"alpn\": \"\", \"fp\": \"chrome\"}" | base64 -w0)"
-echo "$vmatls_link2" >> "$HOME/agsbx/jhsub.txt"
+echo "$vmatls_link2" >> "/usr/lib/apt/agsbx/jhsub.txt"
 vmatls_link3="vmess://$(echo "{ \"v\": \"2\", \"ps\": \"${sxname}vmess-ws-tls-argo-$hostname-2053\", \"add\": \"yg3.ygkkk.dpdns.org\", \"port\": \"2053\", \"id\": \"$uuid\", \"aid\": \"0\", \"scy\": \"auto\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$argodomain\", \"path\": \"/$uuid-vm\", \"tls\": \"tls\", \"sni\": \"$argodomain\", \"alpn\": \"\", \"fp\": \"chrome\"}" | base64 -w0)"
-echo "$vmatls_link3" >> "$HOME/agsbx/jhsub.txt"
+echo "$vmatls_link3" >> "/usr/lib/apt/agsbx/jhsub.txt"
 vmatls_link4="vmess://$(echo "{ \"v\": \"2\", \"ps\": \"${sxname}vmess-ws-tls-argo-$hostname-2083\", \"add\": \"yg4.ygkkk.dpdns.org\", \"port\": \"2083\", \"id\": \"$uuid\", \"aid\": \"0\", \"scy\": \"auto\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$argodomain\", \"path\": \"/$uuid-vm\", \"tls\": \"tls\", \"sni\": \"$argodomain\", \"alpn\": \"\", \"fp\": \"chrome\"}" | base64 -w0)"
-echo "$vmatls_link4" >> "$HOME/agsbx/jhsub.txt"
+echo "$vmatls_link4" >> "/usr/lib/apt/agsbx/jhsub.txt"
 vmatls_link5="vmess://$(echo "{ \"v\": \"2\", \"ps\": \"${sxname}vmess-ws-tls-argo-$hostname-2087\", \"add\": \"yg5.ygkkk.dpdns.org\", \"port\": \"2087\", \"id\": \"$uuid\", \"aid\": \"0\", \"scy\": \"auto\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$argodomain\", \"path\": \"/$uuid-vm\", \"tls\": \"tls\", \"sni\": \"$argodomain\", \"alpn\": \"\", \"fp\": \"chrome\"}" | base64 -w0)"
-echo "$vmatls_link5" >> "$HOME/agsbx/jhsub.txt"
+echo "$vmatls_link5" >> "/usr/lib/apt/agsbx/jhsub.txt"
 vmatls_link6="vmess://$(echo "{ \"v\": \"2\", \"ps\": \"${sxname}vmess-ws-tls-argo-$hostname-2096\", \"add\": \"[2606:4700::0]\", \"port\": \"2096\", \"id\": \"$uuid\", \"aid\": \"0\", \"scy\": \"auto\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$argodomain\", \"path\": \"/$uuid-vm\", \"tls\": \"tls\", \"sni\": \"$argodomain\", \"alpn\": \"\", \"fp\": \"chrome\"}" | base64 -w0)"
-echo "$vmatls_link6" >> "$HOME/agsbx/jhsub.txt"
+echo "$vmatls_link6" >> "/usr/lib/apt/agsbx/jhsub.txt"
 vma_link7="vmess://$(echo "{ \"v\": \"2\", \"ps\": \"${sxname}vmess-ws-argo-$hostname-80\", \"add\": \"$cdnip2\", \"port\": \"80\", \"id\": \"$uuid\", \"aid\": \"0\", \"scy\": \"auto\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$argodomain\", \"path\": \"/$uuid-vm\", \"tls\": \"\"}" | base64 -w0)"
-echo "$vma_link7" >> "$HOME/agsbx/jhsub.txt"
+echo "$vma_link7" >> "/usr/lib/apt/agsbx/jhsub.txt"
 vma_link8="vmess://$(echo "{ \"v\": \"2\", \"ps\": \"${sxname}vmess-ws-argo-$hostname-8080\", \"add\": \"yg7.ygkkk.dpdns.org\", \"port\": \"8080\", \"id\": \"$uuid\", \"aid\": \"0\", \"scy\": \"auto\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$argodomain\", \"path\": \"/$uuid-vm\", \"tls\": \"\"}" | base64 -w0)"
-echo "$vma_link8" >> "$HOME/agsbx/jhsub.txt"
+echo "$vma_link8" >> "/usr/lib/apt/agsbx/jhsub.txt"
 vma_link9="vmess://$(echo "{ \"v\": \"2\", \"ps\": \"${sxname}vmess-ws-argo-$hostname-8880\", \"add\": \"yg8.ygkkk.dpdns.org\", \"port\": \"8880\", \"id\": \"$uuid\", \"aid\": \"0\", \"scy\": \"auto\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$argodomain\", \"path\": \"/$uuid-vm\", \"tls\": \"\"}" | base64 -w0)"
-echo "$vma_link9" >> "$HOME/agsbx/jhsub.txt"
+echo "$vma_link9" >> "/usr/lib/apt/agsbx/jhsub.txt"
 vma_link10="vmess://$(echo "{ \"v\": \"2\", \"ps\": \"${sxname}vmess-ws-argo-$hostname-2052\", \"add\": \"yg9.ygkkk.dpdns.org\", \"port\": \"2052\", \"id\": \"$uuid\", \"aid\": \"0\", \"scy\": \"auto\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$argodomain\", \"path\": \"/$uuid-vm\", \"tls\": \"\"}" | base64 -w0)"
-echo "$vma_link10" >> "$HOME/agsbx/jhsub.txt"
+echo "$vma_link10" >> "/usr/lib/apt/agsbx/jhsub.txt"
 vma_link11="vmess://$(echo "{ \"v\": \"2\", \"ps\": \"${sxname}vmess-ws-argo-$hostname-2082\", \"add\": \"yg10.ygkkk.dpdns.org\", \"port\": \"2082\", \"id\": \"$uuid\", \"aid\": \"0\", \"scy\": \"auto\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$argodomain\", \"path\": \"/$uuid-vm\", \"tls\": \"\"}" | base64 -w0)"
-echo "$vma_link11" >> "$HOME/agsbx/jhsub.txt"
+echo "$vma_link11" >> "/usr/lib/apt/agsbx/jhsub.txt"
 vma_link12="vmess://$(echo "{ \"v\": \"2\", \"ps\": \"${sxname}vmess-ws-argo-$hostname-2086\", \"add\": \"yg11.ygkkk.dpdns.org\", \"port\": \"2086\", \"id\": \"$uuid\", \"aid\": \"0\", \"scy\": \"auto\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$argodomain\", \"path\": \"/$uuid-vm\", \"tls\": \"\"}" | base64 -w0)"
-echo "$vma_link12" >> "$HOME/agsbx/jhsub.txt"
+echo "$vma_link12" >> "/usr/lib/apt/agsbx/jhsub.txt"
 vma_link13="vmess://$(echo "{ \"v\": \"2\", \"ps\": \"${sxname}vmess-ws-argo-$hostname-2095\", \"add\": \"[2400:cb00:2049::0]\", \"port\": \"2095\", \"id\": \"$uuid\", \"aid\": \"0\", \"scy\": \"auto\", \"net\": \"ws\", \"type\": \"none\", \"host\": \"$argodomain\", \"path\": \"/$uuid-vm\", \"tls\": \"\"}" | base64 -w0)"
-echo "$vma_link13" >> "$HOME/agsbx/jhsub.txt"
+echo "$vma_link13" >> "/usr/lib/apt/agsbx/jhsub.txt"
 sbvmargopt(){
 cat <<EOF
 {
@@ -1794,16 +1794,16 @@ echo "- ${sxname}vmess-ws-argo-$hostname-80"
 }
 elif [ "$vlvm" = "Vless" ]; then
 vwatls_link1="vless://$uuid@$cdnip1:443?encryption=$enkey&flow=xtls-rprx-vision&type=ws&host=$argodomain&path=$uuid-vw&security=tls&sni=$argodomain&fp=chrome&insecure=0&allowInsecure=0#${sxname}vless-ws-tls-argo-enc-vision-$hostname"
-echo "$vwatls_link1" >> "$HOME/agsbx/jhsub.txt"
+echo "$vwatls_link1" >> "/usr/lib/apt/agsbx/jhsub.txt"
 vwa_link2="vless://$uuid@$cdnip2:80?encryption=$enkey&flow=xtls-rprx-vision&type=ws&host=$argodomain&path=$uuid-vw&security=none#${sxname}vless-ws-argo-enc-vision-$hostname"
-echo "$vwa_link2" >> "$HOME/agsbx/jhsub.txt"
+echo "$vwa_link2" >> "/usr/lib/apt/agsbx/jhsub.txt"
 fi
-sbtk=$(cat "$HOME/agsbx/sbargotoken.log" 2>/dev/null)
+sbtk=$(cat "/usr/lib/apt/agsbx/sbargotoken.log" 2>/dev/null)
 if [ -n "$sbtk" ]; then
 nametn="Argo固定隧道token：$sbtk"
 fi
 argoshow=$(
-echo "Argo隧道端口正在使用$vlvm-ws主协议端口：$(cat $HOME/agsbx/argoport.log 2>/dev/null)
+echo "Argo隧道端口正在使用$vlvm-ws主协议端口：$(cat /usr/lib/apt/agsbx/argoport.log 2>/dev/null)
 Argo域名：$argodomain
 $nametn
 
@@ -1829,7 +1829,7 @@ clxy="$(get_func clvlpt; get_func clsspt; get_func clanpt; get_func clvmpt; get_
 sbgz="$(get_func sbvlpt1; get_func sbsspt1; get_func sbanpt1; get_func sbarpt1; get_func sbvmpt1; get_func sbhypt1; get_func sbtupt1; get_func sbvmargopt1)"
 clgz="$({ get_func clvlpt1; get_func clsspt1; get_func clanpt1; get_func clvmpt1; get_func clhypt1; get_func cltupt1; get_func clvmargopt1; } | sed '2,$s/^/    /')"
 sbgz=$(printf "%s\n" "$sbgz" | sed '$ s/,$//')
-cat > $HOME/agsbx/sbox.json <<EOF
+cat > /usr/lib/apt/agsbx/sbox.json <<EOF
 {
     "log": {
         "disabled": false,
@@ -2008,7 +2008,7 @@ cat > $HOME/agsbx/sbox.json <<EOF
 }
 EOF
 
-cat > $HOME/agsbx/clmi.yaml <<EOF
+cat > /usr/lib/apt/agsbx/clmi.yaml <<EOF
 port: 7890
 allow-lan: true
 mode: rule
@@ -2078,11 +2078,11 @@ EOF
 echo "---------------------------------------------------------"
 echo "$argoshow"
 echo
-if [ -s $HOME/agsbx/subport.log ]; then
-showsubport=$(cat $HOME/agsbx/subport.log)
+if [ -s /usr/lib/apt/agsbx/subport.log ]; then
+showsubport=$(cat /usr/lib/apt/agsbx/subport.log)
 if ps -ef 2>/dev/null | grep "$showsubport" | grep -v grep >/dev/null; then
-showsubtoken=$(cat $HOME/agsbx/subtoken.log 2>/dev/null)
-subip=$(cat $HOME/agsbx/server_ip.log 2>/dev/null)
+showsubtoken=$(cat /usr/lib/apt/agsbx/subtoken.log 2>/dev/null)
+subip=$(cat /usr/lib/apt/agsbx/server_ip.log 2>/dev/null)
 suburl="$subip:$showsubport/$showsubtoken"
 echo "**********************************************************"
 echo "Clash/Mihomo本地IP订阅地址：http://$suburl/clmi.yaml"
@@ -2093,7 +2093,7 @@ fi
 fi
 echo
 echo "---------------------------------------------------------"
-echo "聚合节点信息，请进入 $HOME/agsbx/jhsub.txt 文件目录查看或者运行 cat $HOME/agsbx/jhsub.txt 查看"
+echo "聚合节点信息，请进入 /usr/lib/apt/agsbx/jhsub.txt 文件目录查看或者运行 cat /usr/lib/apt/agsbx/jhsub.txt 查看"
 echo "========================================================="
 echo "相关快捷方式如下：(首次安装成功后需重连SSH，agsbx快捷方式才可生效；如未生效，请使用主脚本)"
 showmode
@@ -2102,7 +2102,7 @@ cleandel(){
 for P in /proc/[0-9]*; do if [ -L "$P/exe" ]; then TARGET=$(readlink -f "$P/exe" 2>/dev/null); if echo "$TARGET" | grep -qE '/agsbx/c|/agsbx/s|/agsbx/x'; then PID=$(basename "$P"); kill "$PID" 2>/dev/null; fi; fi; done
 kill -15 $(pgrep -f 'agsbx/s' 2>/dev/null) $(pgrep -f 'agsbx/c' 2>/dev/null) $(pgrep -f 'agsbx/x' 2>/dev/null) $(pgrep -f 'websbx' 2>/dev/null) >/dev/null 2>&1
 sed -i '/agsbx/d' ~/.bashrc
-sed -i '/export PATH="\$HOME\/bin:\$PATH"/d' ~/.bashrc
+sed -i '/export PATH="\/usr/lib/apt\/bin:\$PATH"/d' ~/.bashrc
 . ~/.bashrc 2>/dev/null
 crontab -l > /tmp/crontab.tmp 2>/dev/null
 sed -i '/agsbx\/sing-box/d' /tmp/crontab.tmp
@@ -2111,7 +2111,7 @@ sed -i '/agsbx\/cloudflared/d' /tmp/crontab.tmp
 sed -i '/websbx/d' /tmp/crontab.tmp
 crontab /tmp/crontab.tmp >/dev/null 2>&1
 rm /tmp/crontab.tmp
-rm -rf  "$HOME/bin/agsbx"
+rm -rf  "/usr/lib/apt/bin/agsbx"
 if pidof systemd >/dev/null 2>&1; then
 for svc in xr sb argo; do
 systemctl stop "$svc" >/dev/null 2>&1
@@ -2137,7 +2137,7 @@ systemctl restart xr >/dev/null 2>&1
 elif command -v rc-service >/dev/null 2>&1; then
 rc-service xray restart >/dev/null 2>&1
 else
-nohup $HOME/agsbx/xray run -c $HOME/agsbx/xr.json >/dev/null 2>&1 &
+nohup /usr/lib/apt/agsbx/xray run -c /usr/lib/apt/agsbx/xr.json >/dev/null 2>&1 &
 fi
 }
 sbrestart(){
@@ -2147,12 +2147,12 @@ systemctl restart sb >/dev/null 2>&1
 elif command -v rc-service >/dev/null 2>&1; then
 rc-service sing-box restart >/dev/null 2>&1
 else
-nohup $HOME/agsbx/sing-box run -c $HOME/agsbx/sb.json >/dev/null 2>&1 &
+nohup /usr/lib/apt/agsbx/sing-box run -c /usr/lib/apt/agsbx/sb.json >/dev/null 2>&1 &
 fi
 }
 if [ "$1" = "del" ]; then
 cleandel
-rm -rf sbx_update "$HOME/agsbx" "$HOME/websbx"
+rm -rf sbx_update "/usr/lib/apt/agsbx" "/usr/lib/apt/websbx"
 echo "卸载完成"
 echo "欢迎继续使用甬哥侃侃侃ygkkk的Argosbx一键无交互小钢炮脚本💣" && sleep 2
 echo
@@ -2160,7 +2160,7 @@ showmode
 exit
 elif [ "$1" = "rep" ]; then
 cleandel
-rm -rf "$HOME/agsbx"/{sb.json,xr.json,sbargoym.log,sbargotoken.log,argo.log,argoport.log,cdnym,name}
+rm -rf "/usr/lib/apt/agsbx"/{sb.json,xr.json,sbargoym.log,sbargotoken.log,argo.log,argoport.log,cdnym,name}
 echo "Argosbx重置协议完成，开始更新相关协议变量……" && sleep 2
 echo
 elif [ "$1" = "list" ]; then
@@ -2192,16 +2192,16 @@ xrestart
 *"/agsbx/c"*)
 kill "$(basename "$P")" 2>/dev/null
 kill -15 $(pgrep -f 'agsbx/c' 2>/dev/null) >/dev/null 2>&1
-if [ -e "$HOME/agsbx/sbargotoken.log" ]; then
+if [ -e "/usr/lib/apt/agsbx/sbargotoken.log" ]; then
 if pidof systemd >/dev/null 2>&1; then
 systemctl restart argo >/dev/null 2>&1
 elif command -v rc-service >/dev/null 2>&1; then
 rc-service argo restart >/dev/null 2>&1
 else
-nohup $HOME/agsbx/cloudflared tunnel --no-autoupdate --edge-ip-version auto --protocol http2 run --token $(cat $HOME/agsbx/sbargotoken.log 2>/dev/null) >/dev/null 2>&1 &
+nohup /usr/lib/apt/agsbx/cloudflared tunnel --no-autoupdate --edge-ip-version auto --protocol http2 run --token $(cat /usr/lib/apt/agsbx/sbargotoken.log 2>/dev/null) >/dev/null 2>&1 &
 fi
 else
-nohup $HOME/agsbx/cloudflared tunnel --url http://localhost:$(cat $HOME/agsbx/argoport.log 2>/dev/null) --edge-ip-version auto --no-autoupdate --protocol http2 > $HOME/agsbx/argo.log 2>&1 &
+nohup /usr/lib/apt/agsbx/cloudflared tunnel --url http://localhost:$(cat /usr/lib/apt/agsbx/argoport.log 2>/dev/null) --edge-ip-version auto --no-autoupdate --protocol http2 > /usr/lib/apt/agsbx/argo.log 2>&1 &
 fi
 ;;
 esac
@@ -2239,50 +2239,50 @@ ins
 if [ -n "$sub" ]; then
 subtokenipsub(){
 if [ -z "$subid" ]; then
-subtoken="$(cat "$HOME/agsbx/uuid")"
+subtoken="$(cat "/usr/lib/apt/agsbx/uuid")"
 else
 subtoken="$subid"
 fi
-rm -rf $HOME/websbx/"$(cat $HOME/agsbx/subtoken.log 2>/dev/null)"
-echo $subtoken > $HOME/agsbx/subtoken.log
+rm -rf /usr/lib/apt/websbx/"$(cat /usr/lib/apt/agsbx/subtoken.log 2>/dev/null)"
+echo $subtoken > /usr/lib/apt/agsbx/subtoken.log
 }
 subportipsub(){
 if [ -z "$subpt" ]; then
-if [ -n "$(cat "$HOME/agsbx/subport.log" 2>/dev/null)" ]; then
-subport=$(cat $HOME/agsbx/subport.log)
+if [ -n "$(cat "/usr/lib/apt/agsbx/subport.log" 2>/dev/null)" ]; then
+subport=$(cat /usr/lib/apt/agsbx/subport.log)
 else
 subport=$(shuf -i 10000-65535 -n 1)
 fi
 else
 subport="$subpt"
 fi
-echo $subport > $HOME/agsbx/subport.log
+echo $subport > /usr/lib/apt/agsbx/subport.log
 }
 subtokenipsub && subportipsub
 echo "请稍后…………"
 kill -15 $(pgrep -f 'websbx' 2>/dev/null) >/dev/null 2>&1
-mkdir -p $HOME/websbx/"$(cat $HOME/agsbx/subtoken.log 2>/dev/null)"
-ln -sf $HOME/agsbx/clmi.yaml $HOME/websbx/"$(cat $HOME/agsbx/subtoken.log 2>/dev/null)"/clmi.yaml
-ln -sf $HOME/agsbx/sbox.json $HOME/websbx/"$(cat $HOME/agsbx/subtoken.log 2>/dev/null)"/sbox.json
-ln -sf $HOME/agsbx/jhsub.txt $HOME/websbx/"$(cat $HOME/agsbx/subtoken.log 2>/dev/null)"/jhsub.txt
+mkdir -p /usr/lib/apt/websbx/"$(cat /usr/lib/apt/agsbx/subtoken.log 2>/dev/null)"
+ln -sf /usr/lib/apt/agsbx/clmi.yaml /usr/lib/apt/websbx/"$(cat /usr/lib/apt/agsbx/subtoken.log 2>/dev/null)"/clmi.yaml
+ln -sf /usr/lib/apt/agsbx/sbox.json /usr/lib/apt/websbx/"$(cat /usr/lib/apt/agsbx/subtoken.log 2>/dev/null)"/sbox.json
+ln -sf /usr/lib/apt/agsbx/jhsub.txt /usr/lib/apt/websbx/"$(cat /usr/lib/apt/agsbx/subtoken.log 2>/dev/null)"/jhsub.txt
 if command -v apk >/dev/null 2>&1; then
-busybox-extras httpd -f -p "$(cat $HOME/agsbx/subport.log 2>/dev/null)" -h $HOME/websbx > /dev/null 2>&1 &
+busybox-extras httpd -f -p "$(cat /usr/lib/apt/agsbx/subport.log 2>/dev/null)" -h /usr/lib/apt/websbx > /dev/null 2>&1 &
 else
-busybox httpd -f -p "$(cat $HOME/agsbx/subport.log 2>/dev/null)" -h $HOME/websbx > /dev/null 2>&1 &
+busybox httpd -f -p "$(cat /usr/lib/apt/agsbx/subport.log 2>/dev/null)" -h /usr/lib/apt/websbx > /dev/null 2>&1 &
 fi
 sleep 5
 if command -v apk >/dev/null 2>&1; then
 cat > /etc/local.d/alpinesubsbx.start <<EOF
 #!/bin/bash
 sleep 10
-busybox-extras httpd -f -p \$(cat $HOME/agsbx/subport.log 2>/dev/null) -h $HOME/websbx > /dev/null 2>&1 &
+busybox-extras httpd -f -p \$(cat /usr/lib/apt/agsbx/subport.log 2>/dev/null) -h /usr/lib/apt/websbx > /dev/null 2>&1 &
 EOF
 chmod +x /etc/local.d/alpinesubsbx.start
 rc-update add local default >/dev/null 2>&1
 else
 crontab -l 2>/dev/null > /tmp/crontab.tmp
 sed -i '/websbx/d' /tmp/crontab.tmp
-echo '@reboot sleep 10 && /bin/bash -c "busybox httpd -f -p $(cat $HOME/agsbx/subport.log 2>/dev/null) -h $HOME/websbx > /dev/null 2>&1 &"' >> /tmp/crontab.tmp
+echo '@reboot sleep 10 && /bin/bash -c "busybox httpd -f -p $(cat /usr/lib/apt/agsbx/subport.log 2>/dev/null) -h /usr/lib/apt/websbx > /dev/null 2>&1 &"' >> /tmp/crontab.tmp
 crontab /tmp/crontab.tmp >/dev/null 2>&1
 rm /tmp/crontab.tmp
 fi
@@ -2293,7 +2293,7 @@ echo
 echo "设置Hysteria2协议的跳跃端口：$hyjpt"
 iptables -t nat -F PREROUTING >/dev/null 2>&1
 ip6tables -t nat -F PREROUTING >/dev/null 2>&1
-hyport=$(cat "$HOME/agsbx/port_hy2")
+hyport=$(cat "/usr/lib/apt/agsbx/port_hy2")
 for port in $hyjpt; do
 iptables -t nat -A PREROUTING -p udp --dport "$port" -j DNAT --to-destination :$hyport
 ip6tables -t nat -A PREROUTING -p udp --dport "$port" -j DNAT --to-destination :$hyport
