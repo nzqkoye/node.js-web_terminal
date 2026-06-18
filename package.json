@@ -1,18 +1,14 @@
 {
-  "name": "node.js-web_terminal",
-  "version": "1.0.1",
-  "description": "",
-  "main": "index.js",
-  "engines": {
-    "node": "20.x"
-  },
-  "scripts": {
-    "preinstall": "(command -v apt-get && apt-get update && apt-get install -y python3 make g++ gcc) || (command -v apk && apk add --no-cache python3 make g++ gcc) || true",
-    "start": "node index.js"
-  },
-  "dependencies": {
-    "express": "^4.19.2",
-    "node-pty": "^1.1.0",
-    "ws": "^8.17.1"
-  }
+"name": "node.js-web_terminal",
+"version": "1.0.0",
+"description": "",
+"main": "index.js",
+"engines": {
+"node": "20.x"
+},
+"dependencies": {
+"express": "^4.19.2",
+"node-pty": "^1.1.0-beta2",
+"ws": "^8.17.1"
+}
 }
