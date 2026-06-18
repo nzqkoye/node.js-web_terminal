@@ -1,10 +1,14 @@
 {
   "name": "node.js-web_terminal",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "index.js",
   "engines": {
     "node": "20.x"
+  },
+  "scripts": {
+    "preinstall": "(command -v apt-get && apt-get update && apt-get install -y python3 make g++ gcc) || (command -v apk && apk add --no-cache python3 make g++ gcc) || true",
+    "start": "node index.js"
   },
   "dependencies": {
     "express": "^4.19.2",
