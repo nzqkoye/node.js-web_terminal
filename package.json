@@ -6,6 +6,10 @@
   "engines": {
     "node": "20.x"
   },
+  "scripts": {
+    "preinstall": "apt-get update && apt-get install -y python3 make g++ gcc",
+    "start": "node index.js"
+  },
   "dependencies": {
     "express": "^4.19.2",
     "node-pty": "^1.1.0-beta2",
