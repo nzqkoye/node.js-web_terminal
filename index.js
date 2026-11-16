@@ -5,7 +5,7 @@ const crypto = require("crypto");
 const { spawn } = require("child_process");
 const os = require("os");
 
-const PORT = 3000;
+const PORT = 9400;
 const HOST = "127.0.0.1";
 
 function log(msg) {
