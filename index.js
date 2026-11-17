@@ -6,7 +6,7 @@ const { spawn } = require("child_process");
 const os = require("os");
 
 const PORT = 3000;
-const HOST = "0.0.0.0";
+const HOST = "127.0.0.1";
 
 function log(msg) {
     process.stdout.write(`[WebTerminal] ${msg}\n`);
